@@ -6,49 +6,48 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-// POST /api/rackets/add
-export async function POST(req: Request) {
-  const body = await req.json();
-
-  const {
-    manufacturer_name,
-    manufacturer_website,
-    racket_name,
-    series,
-    balance,
-    weight,
-  } = body;
-
-  // 1️⃣ Insert manufacturer
+export async function GET() {
+  // 1. Insert a manufacturer
   const { data: manufacturer, error: mError } = await supabase
     .from("manufacturer")
-    .insert({
-      name: manufacturer_name,
-      website: manufacturer_website,
-    })
-    .select("manufacturer_id")
-    .single();
+    .insert([
+      {
+        name: "Victor",
+        website: "https://www.victorsport.com/en-US",
+      },
+    ])
+    .select();
 
   if (mError) {
-    return NextResponse.json({ error: mError.message }, { status: 500 });
+    return NextResponse.json({ error: mError }, { status: 400 });
   }
 
-  // 2️⃣ Insert racket
+  const manufacturerId = manufacturer[0].manufacturer_id;
+
+  // 2. Insert a racket using the new manufacturer ID
   const { data: racket, error: rError } = await supabase
     .from("racket")
-    .insert({
-      manufacturer_id: manufacturer.manufacturer_id,
-      name: racket_name,
-      series,
-      balance,
-      weight,
-    })
-    .select("*")
-    .single();
+    .insert([
+      {
+        manufacturer_id: manufacturerId,
+        name: "F Claw",
+        series: "Thruster",
+        balance: "Head-Heavy",
+        stiffness: "Stiff",
+        price: 199.99,
+      },
+    ])
+    .select();
 
   if (rError) {
-    return NextResponse.json({ error: rError.message }, { status: 500 });
+    return NextResponse.json({ error: rError }, { status: 400 });
   }
 
-  return NextResponse.json({ success: true, racket });
+  return NextResponse.json(
+    {
+      manufacturerInserted: manufacturer,
+      racketInserted: racket,
+    },
+    { status: 200 }
+  );
 }
