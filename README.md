@@ -56,7 +56,10 @@ Interactive CLI tool to insert data into Supabase tables.
 
 ## Setup
 
-1. Ensure `package.json` has `"type": "module"`:
+1. npm install prompts
+2. npm install dotenv
+
+3. Ensure `package.json` has `"type": "module"`:
 
 ```json
 {
@@ -64,7 +67,7 @@ Interactive CLI tool to insert data into Supabase tables.
 }
 ```
 
-2. add to `.env.local` file:
+4. add to `.env.local` file:
 
 ```env
 SUPABASE_SERVICE_ROLE_KEY=(get the secret key from api keys in supabase)
