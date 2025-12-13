@@ -1,4 +1,3 @@
-// app/signup/page.tsx
 "use client";
 
 import { useState } from "react";
@@ -31,7 +30,8 @@ export default function SignUpPage() {
     setError("");
     setSuccess(false);
 
-    const { data, error: signUpError } = await supabase.auth.signUp({
+    // Step 1: Create auth user
+    const { data: authData, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -39,16 +39,35 @@ export default function SignUpPage() {
       },
     });
 
-    setLoading(false);
-
     if (signUpError) {
       setError(signUpError.message);
-    } else if (data.user) {
+      setLoading(false);
+      return;
+    }
+
+    // Step 2: Add to users table with the UUID from auth
+    if (authData.user) {
+      const { error: insertError } = await supabase.from("users").insert({
+        user_id: authData.user.id, // Pass the UUID explicitly
+        email: authData.user.email,
+        date_created: new Date().toISOString(),
+      });
+
+      if (insertError) {
+        console.error("Error adding user to users table:", insertError);
+        setError(
+          `Account created but profile setup failed: ${insertError.message}`
+        );
+        setLoading(false);
+        return;
+      }
+
       setSuccess(true);
-      // Clear form
       setEmail("");
       setPassword("");
     }
+
+    setLoading(false);
   };
 
   return (
@@ -65,8 +84,8 @@ export default function SignUpPage() {
             <Alert className="mb-4 border-green-500 bg-green-50 dark:bg-green-950">
               <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
               <AlertDescription className="text-green-800 dark:text-green-200">
-                <strong>Success!</strong> Check your email to confirm your
-                account. You'll need to verify your email before signing in.
+                <strong>Success!</strong> Your account has been created. You can
+                now sign in.
               </AlertDescription>
             </Alert>
           ) : (
@@ -111,7 +130,7 @@ export default function SignUpPage() {
 
           <div className="mt-4 text-center text-sm">
             Already have an account?{" "}
-            <Link href="/sign-in" className="text-primary hover:underline">
+            <Link href="/login" className="text-primary hover:underline">
               Sign in
             </Link>
           </div>
