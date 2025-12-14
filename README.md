@@ -1,36 +1,49 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# RacketRecs — Local Development Setup
 
-## Getting Started
+Follow these steps to set up your local environment and connect the app to Supabase.
 
-First, run the development server:
+---
+
+## 1. Create Environment File
+
+In the root of your **frontend** directory (same level as `package.json`), create a file named `.env.local`.
+
+Paste the following inside:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+NEXT_PUBLIC_SUPABASE_URL=https://vwxuphwwdjllxzlhwveq.supabase.co/
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ3eHVwaHd3ZGpsbHh6bGh3dmVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3NTk3MzMsImV4cCI6MjA3OTMzNTczM30._2oFLvQjgNYjAk6XO9ybzJ_S3H90CQYUgcs75ef-C3M
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 2. Install Dependencies
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+In your terminal, navigate to the `frontend` folder:
 
-## Learn More
+```
+cd frontend
+```
 
-To learn more about Next.js, take a look at the following resources:
+Then install the dependencies:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+npm install
+npm install @supabase/supabase-js
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 3. Run the Development Server
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Start the local dev server:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+npm run dev
+```
+
+Once it starts, open your browser and visit:
+
+[http://localhost:3000](http://localhost:3000)
+
+---
