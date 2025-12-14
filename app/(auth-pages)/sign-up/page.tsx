@@ -130,7 +130,7 @@ export default function SignUpPage() {
 
           <div className="mt-4 text-center text-sm">
             Already have an account?{" "}
-            <Link href="/login" className="text-primary hover:underline">
+            <Link href="/sign-in" className="text-primary hover:underline">
               Sign in
             </Link>
           </div>
