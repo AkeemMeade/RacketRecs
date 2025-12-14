@@ -6,9 +6,9 @@ export default function Home() {
       <h1>Welcome to RacketRecs</h1>
 
       <nav>
-        <Link href="/login">Sign In</Link>
+        <Link href="/sign-in">Sign In</Link>
         <br />
-        <Link href="/register">Create Account</Link>
+        <Link href="/sign-up">Create Account</Link>
         <br />
         <Link href="/assessment">Player Assessment</Link>
         <br />
