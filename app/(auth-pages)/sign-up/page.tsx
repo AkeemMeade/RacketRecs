@@ -79,7 +79,7 @@ export default function SignUpPage() {
   return (
     <main className="relative min-h-screen overflow-hidden">
       {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-sky-400 via-sky-300 to-sky-200" />
+      <div className="fixed inset-0 bg-gradient-to-b from-blue-400 via-blue-300 to-blue-200 -z-10" />
       <div className="absolute inset-x-0 top-0 h-1 bg-amber-400/90" />
 
       {/* ===== NAV BAR ===== */}
