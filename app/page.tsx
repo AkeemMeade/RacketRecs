@@ -11,34 +11,42 @@ const roboto = Roboto({
   weight: ["300", "400", "500", "700"],
 });
 
-
 export default function Home() {
   return (
-    <main>
-      <nav className={`${outfit.className} mt-9 flex justify-center items-center gap-6 p-4`}>
-        <Link className={`text-center font-extrabold text-3xl uppercase mr-220`} href="/Home">RacketRecs</Link>
-        <br />
-        <Link href="/about">about</Link>
-        <br />
-        <Link href="/contact">contact</Link>
-        <br />
-        <Link href="/sign-in" className="px-4 py-2 bg-primary text-primary-foreground rounded-4xl hover:opacity-90">Sign In</Link>
-        <br />
-        <Link href="/sign-up" className="px-4 py-2 border-2 border-white text-white rounded-4xl hover:opacity-90">Create Account</Link>
-      </nav>
-      <br />
+    <main className="relative min-h-screen">
+      {/* Background gradient */}
+      <div className="fixed inset-0 bg-gradient-to-b from-blue-400 via-blue-300 to-blue-200 -z-10" />
 
-      <div className="w-full h-2 bg-[#FFC038]"></div>
+      <div className="relative z-10">
+        {/* Hero section */}
+        <div className="my-24">
+          <h1
+            className={`text-center ${outfit.className} font-extrabold text-7xl text-white`}
+          >
+            Personalized Racket <br /> Recommendations, Made Simple
+          </h1>
+          <h2
+            className={`text-center my-8 ${roboto.className} text-2xl text-white`}
+          >
+            Our assessment matches you with rackets designed for your game.
+          </h2>
+        </div>
 
-      <div className="my-45">
-        <h1 className={`text-center ${outfit.className} font-extrabold text-7xl`}>Personalized Racket <br /> Recommendations, Made Simple</h1>
-        <h2 className={`text-center my-15 ${roboto.className} text-2xl`}>Our assessment matches you with rackets designed for your game.</h2>
-      </div>
-      <div className="flex justify-center gap-4 -mt-25">
-        <Link href="/assessment" className="px-7 py-4 bg-[#FFC038] text-white tracking-widest font-semibold rounded-full hover:opacity-90">Player Assessment</Link>
-        <br />
-        <Link href="/rackets" className="px-7 py-4 bg-[#FFC038] text-white tracking-widest font-semibold rounded-full hover:opacity-90">Browse Rackets</Link>
-        <br />
+        {/* Buttons */}
+        <div className="flex justify-center gap-4">
+          <Link
+            href="/assessment"
+            className="px-8 py-4 bg-[#FFC038] text-white tracking-widest font-semibold rounded-full hover:opacity-90"
+          >
+            Player Assessment
+          </Link>
+          <Link
+            href="/rackets"
+            className="px-8 py-4 bg-[#FFC038] text-white tracking-widest font-semibold rounded-full hover:opacity-90"
+          >
+            Browse Rackets
+          </Link>
+        </div>
       </div>
     </main>
   );
