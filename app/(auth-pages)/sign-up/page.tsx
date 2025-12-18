@@ -80,44 +80,7 @@ export default function SignUpPage() {
     <main className="relative min-h-screen overflow-hidden">
       {/* Background */}
       <div className="fixed inset-0 bg-gradient-to-b from-blue-400 via-blue-300 to-blue-200 -z-10" />
-      <div className="absolute inset-x-0 top-0 h-1 bg-amber-400/90" />
 
-      {/* ===== NAV BAR ===== */}
-      <nav
-        className={`${outfit.className} relative z-10 mt-9 flex justify-center items-center gap-6 p-4`}
-      >
-        <Link
-          href="/Home"
-          className="text-center font-extrabold text-3xl uppercase mr-220 text-white"
-        >
-          RacketRecs
-        </Link>
-
-        <Link href="/about" className="text-white/90 hover:text-white">
-          about
-        </Link>
-
-        <Link href="/contact" className="text-white/90 hover:text-white">
-          contact
-        </Link>
-
-        <Link
-          href="/sign-in"
-          className="px-4 py-2 bg-primary text-primary-foreground rounded-4xl hover:opacity-90"
-        >
-          Sign In
-        </Link>
-
-        <Link
-          href="/sign-up"
-          className="px-4 py-2 border-2 border-white text-white rounded-4xl hover:opacity-90"
-        >
-          Create Account
-        </Link>
-      </nav>
-
-      {/* Gold divider */}
-      <div className="relative z-10 w-full h-2 bg-[#FFC038]" />
 
       {/* ===== AUTH CONTENT ===== */}
       <div className="relative z-10 mx-auto flex min-h-[calc(100vh-140px)] max-w-6xl items-center justify-center p-6">
