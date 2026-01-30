@@ -11,8 +11,7 @@ In the root of your **frontend** directory (same level as `package.json`), creat
 Paste the following inside:
 
 ```bash
-NEXT_PUBLIC_SUPABASE_URL=https://vwxuphwwdjllxzlhwveq.supabase.co/
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ3eHVwaHd3ZGpsbHh6bGh3dmVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3NTk3MzMsImV4cCI6MjA3OTMzNTczM30._2oFLvQjgNYjAk6XO9ybzJ_S3H90CQYUgcs75ef-C3M
+
 ```
 
 ---
