@@ -1,8 +1,3 @@
-"""
-Badminton Racket Scraper - Basic Template
-Uses requests + BeautifulSoup for simple web scraping
-"""
-
 import requests
 from bs4 import BeautifulSoup
 import time
@@ -10,7 +5,6 @@ import json
 import csv
 from typing import List, Dict
 from datetime import datetime
-import os
 
 class BadmintonRacketScraper:
     def __init__(self):
@@ -26,18 +20,20 @@ class BadmintonRacketScraper:
             print(f"Fetching: {url}")
             response = self.session.get(url, headers=self.headers, timeout=10)
             response.raise_for_status()
-            time.sleep(self.delay)  # Be polite
+            time.sleep(self.delay) 
             return BeautifulSoup(response.content, 'html.parser')
         except Exception as e:
             print(f"Error fetching {url}: {e}")
             return None
     
-    def scrape_yumo_rackets(self) -> List[str]:
+    def scrape_joybadminton_rackets(self) -> List[str]:
         """
-        Scrape all badminton racket names from yumo.ca
-        Returns a list of racket names
+        Scrape all badminton racket names from joybadminton.com
+        Returns a list of dicts with `name` and `url`
+        Deduplicates by base product URL to avoid color/variant duplicates
         """
         rackets = []
+        seen_urls = set()  # Track unique base URLs
         base_url = "https://yumo.ca/collections/badminton-rackets"
         page = 1
         
@@ -58,11 +54,29 @@ class BadmintonRacketScraper:
                 break
             
             for link in product_links:
+                href = link.get('href')
+                if not href:
+                    continue
+                # Build absolute URL and normalize (remove query params like color variants)
+                product_url = requests.compat.urljoin(base_url, href)
+                #  remove trailing slash and query params to catch variants
+                base_product_url = product_url.split('?')[0].rstrip('/')
+                
+                # Skip if we've already seen this product
+                if base_product_url in seen_urls:
+                    continue
+                
+                seen_urls.add(base_product_url)
+                
                 name = link.get_text(strip=True)
-                if name and name not in rackets:  # Avoid duplicates
-                    rackets.append(name)
+                if not name:
+                    # fallback to title attribute or last path segment
+                    name = link.get('title') or base_product_url.rstrip('/').split('/')[-1]
+
+                entry = {'name': name, 'url': base_product_url}
+                rackets.append(entry)
             
-            print(f"Page {page}: Found {len(product_links)} products")
+            print(f"Page {page}: Found {len(product_links)} links, {len(seen_urls)} unique products so far")
             page += 1
             
             # Safety check to avoid infinite loop
@@ -73,19 +87,249 @@ class BadmintonRacketScraper:
     
     def scrape_product_details(self, product_url: str) -> Dict:
         """
-        Scrape detailed information from a product page
+        Scrape detailed information from a product page with robust spec extraction
         """
+        import re
         soup = self.fetch_page(product_url)
         if not soup:
             return None
-        
         details = {
             'url': product_url,
             'specifications': {},
             'description': ''
         }
-        # Extract product name
+
+        # Try common description containers
+        desc_selectors = [
+            '.product-single__description',
+            '.product-description',
+            '.description',
+            '.rte',
+            '#ProductInfo',
+        ]
+
+        description_text = ''
+        for sel in desc_selectors:
+            node = soup.select_one(sel)
+            if node and node.get_text(strip=True):
+                description_text = node.get_text('\n', strip=True)
+                break
+
+        # Fallback: use main content text
+        if not description_text:
+            main = soup.find('main') or soup.find('body')
+            if main:
+                description_text = main.get_text('\n', strip=True)
+
+        details['description'] = description_text
+
+        # 1) Look for specification tables
+        spec_table = soup.find('table')
+        if spec_table:
+            rows = spec_table.find_all('tr')
+            for row in rows:
+                cols = row.find_all(['th', 'td'])
+                if len(cols) >= 2:
+                    key = cols[0].get_text(strip=True)
+                    value = cols[1].get_text(strip=True)
+                    if key and not key.lower() in ['pick up in-store', 'orders over']:
+                        details['specifications'][key] = value
+
+        # 2) Look for definition lists (dt/dd)
+        if not details['specifications']:
+            dts = soup.find_all('dt')
+            for dt in dts:
+                dd = dt.find_next_sibling('dd')
+                if dd:
+                    key = dt.get_text(strip=True)
+                    value = dd.get_text(strip=True)
+                    if key and not key.lower() in ['pick up in-store', 'orders over']:
+                        details['specifications'][key] = value
+
+        # 3) Parse description text to extract structured specs
+        self._extract_specs_from_description(description_text, details['specifications'])
+
         return details
+    
+    def _extract_specs_from_description(self, desc_text: str, specs_dict: Dict):
+        """
+        Parse description text and extract structured specifications.
+        Looks for patterns and common spec keywords.
+        """
+        import re
+        if not desc_text:
+            return
+        
+        lines = [l.strip() for l in desc_text.split('\n') if l.strip()]
+        
+        # Standard spec keywords to extract
+        spec_keywords = {
+            'model': ['model'],
+            'color': ['color'],
+            'weight': ['weight', 'grams', 'gram', 'lbs', '3u', '4u', '5u'],
+            'balance': ['balance', 'head heavy', 'head light', 'even balance'],
+            'shaft flexibility': ['shaft flexibility', 'flex', 'flexible', 'stiff', 'hard flex', 'medium'],
+            'shaft thickness': ['shaft thickness', 'shaft mm'],
+            'grip size': ['grip size'],
+            'frame material': ['frame material', 'carbon', 'graphite'],
+            'shaft material': ['shaft material'],
+            'material': ['material', 'carbon fiber', 'graphite'],
+            'player type': ['player type', 'attack', 'defense', 'precision', 'speed'],
+            'player level': ['player level', 'beginner', 'intermediate', 'professional', 'professional'],
+            'string tension': ['string tension', 'lbs', 'tension'],
+            'overall length': ['overall length', 'length', '675mm'],
+        }
+        
+        for line in lines:
+            # Skip shipping and store pickup lines
+            if any(skip in line.lower() for skip in ['pick up', 'shipping', 'standard shipping', 'orders over']):
+                continue
+            
+            # Pattern 1: "Key: Value" format
+            if ':' in line and len(line) < 150:
+                parts = line.split(':', 1)
+                key = parts[0].strip()
+                value = parts[1].strip()
+                
+                # Check if key matches any spec keyword
+                key_lower = key.lower()
+                for spec_key, keywords in spec_keywords.items():
+                    if any(kw in key_lower for kw in keywords) and value:
+                        if spec_key not in specs_dict:
+                            specs_dict[spec_key] = value
+                        break
+                
+                # If no keyword match but key is short, it might be a spec label
+                if len(key) < 30 and value and not any(skip in key.lower() for skip in ['made', 'product', 'technology']):
+                    if key not in specs_dict:
+                        specs_dict[key] = value
+            
+            # Pattern 2: "Weight: 3U (85-89g)" or similar
+            m = re.search(r'weight\s*[:\-]?\s*([0-9]U|[0-9]+\s*g)', line, re.I)
+            if m and 'weight' not in specs_dict:
+                specs_dict['weight'] = m.group(1)
+            
+            # Pattern 3: "Balance: Head Heavy" or similar
+            m = re.search(r'balance\s*[:\-]?\s*(head heavy|head light|even balance)', line, re.I)
+            if m and 'balance' not in specs_dict:
+                specs_dict['balance'] = m.group(1)
+            
+            # Pattern 4: "Flex: Flexible" or similar
+            m = re.search(r'flex(?:ibility)?\s*[:\-]?\s*([a-z\s]+?)(?:\n|$)', line, re.I)
+            if m and 'shaft flexibility' not in specs_dict:
+                specs_dict['shaft flexibility'] = m.group(1).strip()
+            
+            # Pattern 5: Grip size like "G5", "G6"
+            m = re.search(r'grip\s+size\s*[:\-]?\s*(g[0-9])', line, re.I)
+            if m and 'grip size' not in specs_dict:
+                specs_dict['grip size'] = m.group(1).upper()
+    
+    def normalize_specifications(self, data: List[Dict]) -> List[Dict]:
+        """
+        Normalize all specifications to consistent field names.
+        Standardizes common variations and fills gaps from descriptions.
+        """
+        import re
+        
+        # Define standard spec field names and their aliases
+        field_aliases = {
+            'Model': ['Model', 'model', 'product model'],
+            'Color': ['Color', 'color'],
+            'Weight': ['Weight', 'weight', 'Weight Class'],
+            'Balance': ['Balance', 'balance'],
+            'Shaft Flexibility': ['Shaft Flexibility', 'shaft flexibility', 'Flex', 'flex', 'Flexibility'],
+            'Shaft Thickness': ['Shaft Thickness', 'shaft thickness', 'Shaft Mm', 'shaft mm'],
+            'Grip Size': ['Grip Size', 'grip size', 'Racket Grip Size'],
+            'Frame Material': ['Frame Material', 'frame material'],
+            'Shaft Material': ['Shaft Material', 'shaft material'],
+            'Material': ['Material', 'material'],
+            'Player Type': ['Player Type', 'player type'],
+            'Player Level': ['Player Level', 'player level'],
+            'String Tension': ['String Tension', 'string tension', 'Maximum Racket Tension', 'Stringing Tension'],
+            'Overall Length': ['Overall Length', 'overall length', 'Length'],
+            'Frame Shape': ['Frame Shape', 'frame shape'],
+            'Product Range': ['Product Range', 'product range'],
+        }
+        
+        for item in data:
+            if 'specifications' not in item:
+                item['specifications'] = {}
+            
+            specs = item['specifications']
+            normalized = {}
+            
+            # First pass: consolidate existing specs under standard names
+            for standard_name, aliases in field_aliases.items():
+                for spec_key, spec_value in specs.items():
+                    if spec_key in aliases:
+                        if standard_name not in normalized:
+                            normalized[standard_name] = spec_value
+                        break
+            
+            # Second pass: look for unmapped specs
+            for spec_key, spec_value in specs.items():
+                is_mapped = False
+                for standard_name, aliases in field_aliases.items():
+                    if spec_key in aliases:
+                        is_mapped = True
+                        break
+                if not is_mapped and spec_value:
+                    # Try to assign unmapped specs intelligently
+                    key_lower = spec_key.lower()
+                    if 'balance' in key_lower:
+                        normalized['Balance'] = spec_value
+                    elif 'weight' in key_lower or 'gram' in key_lower:
+                        normalized['Weight'] = spec_value
+                    elif 'color' in key_lower:
+                        normalized['Color'] = spec_value
+                    elif any(x in key_lower for x in ['flex', 'stiff']):
+                        normalized['Shaft Flexibility'] = spec_value
+                    elif 'material' in key_lower:
+                        if 'frame' in key_lower:
+                            normalized['Frame Material'] = spec_value
+                        elif 'shaft' in key_lower:
+                            normalized['Shaft Material'] = spec_value
+                        else:
+                            normalized['Material'] = spec_value
+                    elif 'grip' in key_lower:
+                        normalized['Grip Size'] = spec_value
+                    elif 'player' in key_lower:
+                        if 'level' in key_lower:
+                            normalized['Player Level'] = spec_value
+                        elif 'type' in key_lower:
+                            normalized['Player Type'] = spec_value
+            
+            # Third pass: extract missing key specs from description if available
+            if 'description' in item and item['description']:
+                desc = item['description']
+                
+                # Extract Balance if missing
+                if 'Balance' not in normalized:
+                    m = re.search(r'Balance\s*[:\-]?\s*([^\n]+)', desc, re.I)
+                    if m:
+                        normalized['Balance'] = m.group(1).strip()
+                
+                # Extract Weight if missing
+                if 'Weight' not in normalized:
+                    m = re.search(r'Weight\s*[:\-]?\s*([^\n]+)', desc, re.I)
+                    if m:
+                        normalized['Weight'] = m.group(1).strip()
+                
+                # Extract Flex if missing
+                if 'Shaft Flexibility' not in normalized:
+                    m = re.search(r'(?:Shaft\s+)?Flexibility\s*[:\-]?\s*([^\n]+)', desc, re.I)
+                    if m:
+                        normalized['Shaft Flexibility'] = m.group(1).strip()
+                
+                # Extract Color if missing
+                if 'Color' not in normalized:
+                    m = re.search(r'Color\s*[:\-]?\s*([^\n]+)', desc, re.I)
+                    if m:
+                        normalized['Color'] = m.group(1).strip()
+            
+            item['specifications'] = normalized
+        
+        return data
     
     def extract_brand(self, product_element) -> str:
         """Extract brand from product element or name"""
@@ -119,36 +363,63 @@ class BadmintonRacketScraper:
         if not data:
             print("No data to save")
             return
-        
-        keys = data[0].keys()
+        # Ensure nested dicts are serialized for CSV
+        rows = []
+        for item in data:
+            row = {}
+            for k, v in item.items():
+                if isinstance(v, (dict, list)):
+                    row[k] = json.dumps(v, ensure_ascii=False)
+                else:
+                    row[k] = v
+            rows.append(row)
+
+        keys = rows[0].keys()
         with open(filename, 'w', newline='', encoding='utf-8') as f:
             writer = csv.DictWriter(f, fieldnames=keys)
             writer.writeheader()
-            writer.writerows(data)
-        print(f"Saved {len(data)} items to {filename}")
+            writer.writerows(rows)
+        print(f"Saved {len(rows)} items to {filename}")
 
 
-# Example usage
+
 if __name__ == "__main__":
     scraper = BadmintonRacketScraper()
     
     print("Yumopro Racket Scraper")
     print("=" * 50)
     
-    print("Scraping all badminton racket names from Yumo.com...")
-    racket_names = scraper.scrape_yumo_rackets()
-    
-    print(f"\nFound {len(racket_names)} unique racket names:")
-    print("=" * 50)
-    
-    for i, name in enumerate(racket_names, 1):
-        print(f"{i:3d}. {name}")
-    
-    # Save to file
-    if not os.path.isdir('scripts/gathering'):
-        os.makedirs('scripts/gathering')
+    print("Scraping all badminton racket entries from Yumo.com...")
+    racket_entries = scraper.scrape_joybadminton_rackets()
 
-    with open('scripts/gathering/yumo_racket_names.txt', 'w', encoding='utf-8') as f:
-        for name in racket_names:
-            f.write(name + '\n')
-    print(f"\nSaved names to scripts/gathering/yumo_racket_names.txt")
+    print(f"\nFound {len(racket_entries)} unique racket entries:")
+    print("=" * 50)
+
+    for i, entry in enumerate(racket_entries, 1):
+        print(f"{i:3d}. {entry.get('name')} -> {entry.get('url')}")
+
+    # Save simple list of names
+    with open('yumo_racket_names.txt', 'w', encoding='utf-8') as f:
+        for entry in racket_entries:
+            f.write(entry.get('name', '') + '\n')
+    print(f"\nSaved names to yumo_racket_names.txt")
+
+    # Now fetch each product page and extract detailed specs
+    detailed = []
+    for entry in racket_entries:
+        url = entry.get('url')
+        name = entry.get('name')
+        details = scraper.scrape_product_details(url)
+        if details:
+            details['name'] = name
+            detailed.append(details)
+
+    # Normalize and standardize all specifications
+    print(f"\nNormalizing specifications for {len(detailed)} rackets...")
+    detailed = scraper.normalize_specifications(detailed)
+
+    # Save detailed results
+    scraper.save_to_json(detailed, 'yumo_rackets_detailed.json')
+    scraper.save_to_csv(detailed, 'yumo_rackets_detailed.csv')
+    
+    print(f"\nDone! Scraped {len(detailed)} unique rackets with standardized specs.")
