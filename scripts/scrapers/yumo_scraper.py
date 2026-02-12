@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 import time
 import json
 import csv
+import os
 from typing import List, Dict
 from datetime import datetime
 
@@ -418,8 +419,13 @@ if __name__ == "__main__":
     print(f"\nNormalizing specifications for {len(detailed)} rackets...")
     detailed = scraper.normalize_specifications(detailed)
 
-    # Save detailed results
-    scraper.save_to_json(detailed, 'yumo_rackets_detailed.json')
-    scraper.save_to_csv(detailed, 'yumo_rackets_detailed.csv')
+    # Create gathering directory if it doesn't exist
+    gathering_dir = 'scripts/gathering'
+    if not os.path.isdir(gathering_dir):
+        os.makedirs(gathering_dir)
+
+    # Save detailed results to gathering folder
+    scraper.save_to_json(detailed, os.path.join(gathering_dir, 'yumo_rackets_detailed.json'))
+    scraper.save_to_csv(detailed, os.path.join(gathering_dir, 'yumo_rackets_detailed.csv'))
     
     print(f"\nDone! Scraped {len(detailed)} unique rackets with standardized specs.")
