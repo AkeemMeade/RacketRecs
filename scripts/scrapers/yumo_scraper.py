@@ -21,7 +21,7 @@ class BadmintonRacketScraper:
             print(f"Fetching: {url}")
             response = self.session.get(url, headers=self.headers, timeout=10)
             response.raise_for_status()
-            time.sleep(self.delay) 
+            time.sleep(self.delay)  # Be polite
             return BeautifulSoup(response.content, 'html.parser')
         except Exception as e:
             print(f"Error fetching {url}: {e}")
@@ -60,7 +60,7 @@ class BadmintonRacketScraper:
                     continue
                 # Build absolute URL and normalize (remove query params like color variants)
                 product_url = requests.compat.urljoin(base_url, href)
-                #  remove trailing slash and query params to catch variants
+                # Normalize: remove trailing slash and query params to catch variants
                 base_product_url = product_url.split('?')[0].rstrip('/')
                 
                 # Skip if we've already seen this product
@@ -97,7 +97,9 @@ class BadmintonRacketScraper:
         details = {
             'url': product_url,
             'specifications': {},
-            'description': ''
+            'description': '',
+            'price': None,
+            'image_url': None,
         }
 
         # Try common description containers
@@ -123,6 +125,44 @@ class BadmintonRacketScraper:
                 description_text = main.get_text('\n', strip=True)
 
         details['description'] = description_text
+
+        # Extract price (try meta tags and common price containers)
+        price_text = ''
+        price_meta = soup.find('meta', attrs={'property': 'product:price:amount'}) or soup.find('meta', attrs={'itemprop': 'price'})
+        if price_meta and price_meta.get('content'):
+            price_text = price_meta.get('content')
+        else:
+            price_node = soup.find(attrs={'class': lambda x: x and 'price' in x.lower()}) or soup.find(id=lambda x: x and 'price' in x.lower())
+            if price_node:
+                price_text = price_node.get_text(' ', strip=True)
+
+        if price_text:
+            m = re.search(r'([0-9]+(?:[\.,][0-9]{2})?)', price_text.replace(',', ''))
+            if m:
+                cad_price = float(m.group(1).replace(',', ''))
+                usd_price = round(cad_price * 0.75, 2)  #  conversion rate
+                details['price'] = usd_price
+
+        # Extract main product image URL
+        image_url = None
+        # Try Open Graph image
+        og_img = soup.find('meta', property='og:image')
+        if og_img and og_img.get('content'):
+            image_url = og_img['content']
+        # Fallback: look for main product image in img tags
+        if not image_url:
+            img_tag = soup.find('img', attrs={'src': re.compile(r'cdn.*(product|racket|badminton).*', re.I)})
+            if img_tag and img_tag.get('src'):
+                image_url = img_tag['src']
+        # Fallback: first large image
+        if not image_url:
+            imgs = soup.find_all('img')
+            for img in imgs:
+                src = img.get('src')
+                if src and ('racket' in src or 'product' in src or 'badminton' in src):
+                    image_url = src
+                    break
+        details['image_url'] = image_url
 
         # 1) Look for specification tables
         spec_table = soup.find('table')
@@ -150,6 +190,29 @@ class BadmintonRacketScraper:
         # 3) Parse description text to extract structured specs
         self._extract_specs_from_description(description_text, details['specifications'])
 
+        # If price still missing, try description
+        if not details.get('price') and description_text:
+            m = re.search(r'\$\s*([0-9]+(?:[\.,][0-9]{2})?)', description_text)
+            if m:
+                cad_price = float(m.group(1).replace(',', ''))
+                usd_price = round(cad_price * 0.75, 2)  #  conversion rate
+                details['price'] = usd_price
+
+        #    IMPROVED STRING TENSION EXTRACTION 
+        # Try to extract string tension from specs or description if missing
+        tension_keys = [k for k in details['specifications'] if 'tension' in k.lower()]
+        if not tension_keys:
+            # Try to extract from description
+            tension_match = re.search(r'(string\s*tension|max(?:imum)?\s*tension|tension\s*lbs?)\s*[:\-]?\s*([\d≦≤]+\s*(?:lbs|kg)?(?:\s*\([^)]+\))?)', description_text, re.I)
+            if tension_match:
+                details['specifications']['String Tension'] = tension_match.group(2).strip()
+            else:
+                # Try to find a line with tension info
+                for line in description_text.split('\n'):
+                    if 'tension' in line.lower() and any(x in line for x in ['lbs', 'kg']):
+                        details['specifications']['String Tension'] = line.strip()
+                        break
+
         return details
     
     def _extract_specs_from_description(self, desc_text: str, specs_dict: Dict):
@@ -170,15 +233,9 @@ class BadmintonRacketScraper:
             'weight': ['weight', 'grams', 'gram', 'lbs', '3u', '4u', '5u'],
             'balance': ['balance', 'head heavy', 'head light', 'even balance'],
             'shaft flexibility': ['shaft flexibility', 'flex', 'flexible', 'stiff', 'hard flex', 'medium'],
-            'shaft thickness': ['shaft thickness', 'shaft mm'],
-            'grip size': ['grip size'],
-            'frame material': ['frame material', 'carbon', 'graphite'],
-            'shaft material': ['shaft material'],
             'material': ['material', 'carbon fiber', 'graphite'],
-            'player type': ['player type', 'attack', 'defense', 'precision', 'speed'],
-            'player level': ['player level', 'beginner', 'intermediate', 'professional', 'professional'],
             'string tension': ['string tension', 'lbs', 'tension'],
-            'overall length': ['overall length', 'length', '675mm'],
+            'price': ['price', '$'],
         }
         
         for line in lines:
@@ -216,7 +273,7 @@ class BadmintonRacketScraper:
                 specs_dict['balance'] = m.group(1)
             
             # Pattern 4: "Flex: Flexible" or similar
-            m = re.search(r'flex(?:ibility)?\s*[:\-]?\s*([a-z\s]+?)(?:\n|$)', line, re.I)
+            m = re.search(r'flex(?:ibility)?\s*[:\-]?\s*(Flexible|Stiff|Medium|Hard Flex)', line, re.I)
             if m and 'shaft flexibility' not in specs_dict:
                 specs_dict['shaft flexibility'] = m.group(1).strip()
             
@@ -224,6 +281,13 @@ class BadmintonRacketScraper:
             m = re.search(r'grip\s+size\s*[:\-]?\s*(g[0-9])', line, re.I)
             if m and 'grip size' not in specs_dict:
                 specs_dict['grip size'] = m.group(1).upper()
+
+            # Price like "$199.99"
+            m = re.search(r'\$\s*([0-9]+(?:[\.,][0-9]{2})?)', line)
+            if m and 'price' not in specs_dict:
+                specs_dict['price'] = m.group(1).replace(',', '')
+
+            # availability parsing removed; only price is kept
     
     def normalize_specifications(self, data: List[Dict]) -> List[Dict]:
         """
@@ -239,17 +303,10 @@ class BadmintonRacketScraper:
             'Weight': ['Weight', 'weight', 'Weight Class'],
             'Balance': ['Balance', 'balance'],
             'Shaft Flexibility': ['Shaft Flexibility', 'shaft flexibility', 'Flex', 'flex', 'Flexibility'],
-            'Shaft Thickness': ['Shaft Thickness', 'shaft thickness', 'Shaft Mm', 'shaft mm'],
-            'Grip Size': ['Grip Size', 'grip size', 'Racket Grip Size'],
-            'Frame Material': ['Frame Material', 'frame material'],
-            'Shaft Material': ['Shaft Material', 'shaft material'],
             'Material': ['Material', 'material'],
-            'Player Type': ['Player Type', 'player type'],
-            'Player Level': ['Player Level', 'player level'],
             'String Tension': ['String Tension', 'string tension', 'Maximum Racket Tension', 'Stringing Tension'],
-            'Overall Length': ['Overall Length', 'overall length', 'Length'],
-            'Frame Shape': ['Frame Shape', 'frame shape'],
             'Product Range': ['Product Range', 'product range'],
+            'Price': ['Price', 'price'],
         }
         
         for item in data:
@@ -259,7 +316,7 @@ class BadmintonRacketScraper:
             specs = item['specifications']
             normalized = {}
             
-            # First pass: consolidate existing specs under standard names
+            # First pass: Search existing specs under standard names
             for standard_name, aliases in field_aliases.items():
                 for spec_key, spec_value in specs.items():
                     if spec_key in aliases:
@@ -286,47 +343,44 @@ class BadmintonRacketScraper:
                     elif any(x in key_lower for x in ['flex', 'stiff']):
                         normalized['Shaft Flexibility'] = spec_value
                     elif 'material' in key_lower:
-                        if 'frame' in key_lower:
-                            normalized['Frame Material'] = spec_value
-                        elif 'shaft' in key_lower:
-                            normalized['Shaft Material'] = spec_value
-                        else:
-                            normalized['Material'] = spec_value
-                    elif 'grip' in key_lower:
-                        normalized['Grip Size'] = spec_value
-                    elif 'player' in key_lower:
-                        if 'level' in key_lower:
-                            normalized['Player Level'] = spec_value
-                        elif 'type' in key_lower:
-                            normalized['Player Type'] = spec_value
+                        normalized['Material'] = spec_value
+                    elif 'price' in key_lower or key_lower.strip().startswith('$'):
+                        normalized['Price'] = str(spec_value).replace('$', '').strip()
+                    # availability normalization removed
             
             # Third pass: extract missing key specs from description if available
             if 'description' in item and item['description']:
                 desc = item['description']
                 
-                # Extract Balance if missing
+                # Extract Balance if missing - only capture known balance types
                 if 'Balance' not in normalized:
-                    m = re.search(r'Balance\s*[:\-]?\s*([^\n]+)', desc, re.I)
+                    m = re.search(r'Balance\s*[:\-]?\s*(Head Heavy|Head Light|Even Balance)', desc, re.I)
                     if m:
                         normalized['Balance'] = m.group(1).strip()
                 
-                # Extract Weight if missing
+                # Extract Weight if missing - capture weight class (3U, 4U, 5U, or grams)
                 if 'Weight' not in normalized:
-                    m = re.search(r'Weight\s*[:\-]?\s*([^\n]+)', desc, re.I)
+                    m = re.search(r'Weight\s*[:\-]?\s*([3-5]U|[0-9]+\s*(?:grams?|g)\b)', desc, re.I)
                     if m:
                         normalized['Weight'] = m.group(1).strip()
                 
-                # Extract Flex if missing
+                # Extract Flex if missing - only capture known flex types
                 if 'Shaft Flexibility' not in normalized:
-                    m = re.search(r'(?:Shaft\s+)?Flexibility\s*[:\-]?\s*([^\n]+)', desc, re.I)
+                    m = re.search(r'(?:Shaft\s+)?Flexibility\s*[:\-]?\s*(Flexible|Stiff|Medium|Hard Flex)', desc, re.I)
                     if m:
                         normalized['Shaft Flexibility'] = m.group(1).strip()
                 
                 # Extract Color if missing
                 if 'Color' not in normalized:
-                    m = re.search(r'Color\s*[:\-]?\s*([^\n]+)', desc, re.I)
+                    m = re.search(r'Color\s*[:\-]?\s*([^\n]+?)(?:\n|Product|$)', desc, re.I)
                     if m:
                         normalized['Color'] = m.group(1).strip()
+                
+                # Extract Maximum Racket Tension if missing
+                if 'Maximum Racket Tension' not in normalized:
+                    m = re.search(r'Maximum Racket Tension\s*[:\-]?\s*([^\n]+?)(?:\n|Product|$|Made)', desc, re.I)
+                    if m:
+                        normalized['Maximum Racket Tension'] = m.group(1).strip()
             
             item['specifications'] = normalized
         
@@ -383,7 +437,50 @@ class BadmintonRacketScraper:
         print(f"Saved {len(rows)} items to {filename}")
 
 
+def import_to_database(rackets: List[Dict]):
+    """
+    Import scraped rackets to the database via the Next.js API endpoint.
+    Requires the Next.js dev server to be running at http://localhost:3000
+    """
+    import requests
+    
+    api_url = "http://localhost:3000/api/rackets/import"
+    
+    try:
+        print(f"Sending {len(rackets)} rackets to API...")
+        response = requests.post(api_url, json=rackets, timeout=30)
+        
+        try:
+            result = response.json()
+        except:
+            print(f"Failed to parse response: {response.text}")
+            return
+        
+        if response.status_code == 201:
+            if result.get("success"):
+                print(f"✓ Database import successful: {result.get('message')}")
+            else:
+                print(f"✗ Database import failed: {result.get('error')}")
+                if result.get('details'):
+                    print(f"  Details: {result.get('details')}")
+                if result.get('hint'):
+                    print(f"  Hint: {result.get('hint')}")
+        else:
+            print(f"✗ API returned status {response.status_code}")
+            print(f"  Error: {result.get('error', 'Unknown error')}")
+            if result.get('details'):
+                print(f"  Details: {result.get('details')}")
+            if result.get('hint'):
+                print(f"  Hint: {result.get('hint')}")
+                
+    except requests.exceptions.ConnectionError:
+        print("✗ Could not connect to API endpoint at http://localhost:3000")
+        print("  Make sure your Next.js dev server is running: npm run dev")
+    except Exception as e:
+        print(f"✗ Error importing to database: {e}")
 
+
+# Example usage
 if __name__ == "__main__":
     scraper = BadmintonRacketScraper()
     
@@ -398,12 +495,6 @@ if __name__ == "__main__":
 
     for i, entry in enumerate(racket_entries, 1):
         print(f"{i:3d}. {entry.get('name')} -> {entry.get('url')}")
-
-    # Save simple list of names
-    with open('yumo_racket_names.txt', 'w', encoding='utf-8') as f:
-        for entry in racket_entries:
-            f.write(entry.get('name', '') + '\n')
-    print(f"\nSaved names to yumo_racket_names.txt")
 
     # Now fetch each product page and extract detailed specs
     detailed = []
@@ -429,3 +520,11 @@ if __name__ == "__main__":
     scraper.save_to_csv(detailed, os.path.join(gathering_dir, 'yumo_rackets_detailed.csv'))
     
     print(f"\nDone! Scraped {len(detailed)} unique rackets with standardized specs.")
+    
+    #  Import to database via API endpoint
+    print("\nImporting to database...")
+    try:
+        import_to_database(detailed)
+    except Exception as e:
+        print(f"Warning: Failed to import to database: {e}")
+        print("You can manually import by making a POST request to /api/rackets/import")
