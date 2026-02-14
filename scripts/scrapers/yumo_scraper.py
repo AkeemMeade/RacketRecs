@@ -32,9 +32,7 @@ class BadmintonRacketScraper:
             print(f"Error fetching {url}: {e}")
             return None
 
-    # -----------------------------
-    # 1) Collect product URLs
-    # -----------------------------
+    # Collect product URLs
     def get_yumo_product_urls(self, max_pages: int = 20) -> List[str]:
         """
         Collect unique product URLs from the badminton rackets collection.
@@ -73,9 +71,7 @@ class BadmintonRacketScraper:
 
         return sorted(urls)
 
-    # -----------------------------
-    # 2) Parse spec lines in accordion HTML
-    # -----------------------------
+    # Parse spec lines in accordion HTML
     @staticmethod
     def _clean_text(s: str) -> str:
         return " ".join((s or "").replace("\xa0", " ").split()).strip()
@@ -90,10 +86,7 @@ class BadmintonRacketScraper:
         def clean(s: str) -> str:
             return " ".join((s or "").replace("\xa0", " ").split()).strip()
 
-        # -------------------------
-        # 1) Grab intro text (first few paragraphs before specs heading)
-        # -------------------------
-        # We'll build intro from <p> elements until we hit a specs/technology heading
+        # Grab intro text (first few paragraphs before specs heading)
         intro_parts = []
         for p in desc_root.find_all("p"):
             t = clean(p.get_text(" ", strip=True))
@@ -105,10 +98,7 @@ class BadmintonRacketScraper:
             intro_parts.append(t)
         result["description_intro"] = clean(" ".join(intro_parts))
 
-        # -------------------------
-        # 2) Specs (LI-BASED) — your screenshot format:
-        #    <ul><li><strong>COLOR: Grey, Red</strong></li> ...
-        # -------------------------
+        # Specs - look for list items that look like "KEY: VALUE"
         for li in desc_root.find_all("li"):
             t = clean(li.get_text(" ", strip=True))
             if not t:
@@ -122,10 +112,8 @@ class BadmintonRacketScraper:
                 if key and val:
                     result["specifications"][key] = val
 
-        # -------------------------
-        # 3) Specs (P-BASED) — your earlier HTML format:
-        #    "Weight - 79 grams..."
-        # -------------------------
+        # Specs (P-BASED) — some pages use paragraphs instead of lists for specs, in "Key - Value" or "Key: Value" format
+
         for p in desc_root.find_all("p"):
             t = clean(p.get_text(" ", strip=True))
             if not t:
@@ -145,9 +133,8 @@ class BadmintonRacketScraper:
                 # don't overwrite LI-based specs if already captured
                 result["specifications"].setdefault(key, val)
 
-        # -------------------------
-        # 4) Technology (best-effort, keep from previous)
-        # -------------------------
+
+        # Technology sections: look for strong tags that might indicate tech names, then grab description from nearby text
         tech_headers = desc_root.select("p.inline-richtext strong")
         for strong in tech_headers:
             name = clean(strong.get_text(" ", strip=True))
@@ -169,9 +156,7 @@ class BadmintonRacketScraper:
         return result
 
 
-    # -----------------------------
-    # 3) Scrape one product page
-    # -----------------------------
+    # Scrape one product page
     def scrape_product_details(self, product_url: str) -> Optional[Dict]:
         soup = self.fetch_page(product_url)
         if not soup:
@@ -212,9 +197,7 @@ class BadmintonRacketScraper:
             "technologies": parsed["technologies"],
         }
 
-    # -----------------------------
-    # 4) Scrape ALL rackets
-    # -----------------------------
+    # Scrape ALL rackets
     def scrape_all_rackets_with_specs(self, max_pages: int = 20) -> List[Dict]:
         product_urls = self.get_yumo_product_urls(max_pages=max_pages)
         print(f"Total product URLs collected: {len(product_urls)}")
