@@ -8,8 +8,8 @@ const supabase = createClient(
 
 export async function GET() {
   const { data, error } = await supabase
-    .from("racket")
-    .select("racket_id, name, series, stiffness, balance, manufacturer_id");
+    .from("racket") 
+    .select("racket_id, name, color, balance, stiffness, price, max_tension, availability, weight, img_url");
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
