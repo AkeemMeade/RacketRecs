@@ -7,24 +7,51 @@ const supabase = createClient(
 );
 
 export async function POST(request: Request) {
-    const { racket_id, user_id } = await request.json();
+  const body = await request.json();
+  const { racketId, userId } = body;
 
-    const { error } = await supabase
-        .from("favorites")
-        .insert(user_id, racket_id);
+  if (!userId || !racketId) {
+    return NextResponse.json(
+      { error: "Missing userId or racketId" },
+      { status: 400 }
+    );
+  }
 
-    return NextResponse.json({ success: !error, error: error ? error.message : null });
+  const { error } = await supabase.from("favorites").insert([
+    {
+      user_id: userId,
+      racket_id: racketId,
+      date_added: new Date().toISOString(),
+    },
+  ]);
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ success: true });
 }
 
 export async function DELETE(request: Request) {
-  const { racketId, userId } = await request.json();
-  
-  // Delete from favorites table
+  const body = await request.json();
+  const { racketId, userId } = body;
+
+  if (!userId || !racketId) {
+    return NextResponse.json(
+      { error: "Missing userId or racketId" },
+      { status: 400 }
+    );
+  }
+
   const { error } = await supabase
-    .from("user_favorites")
+    .from("favorites")
     .delete()
     .eq("user_id", userId)
     .eq("racket_id", racketId);
-  
-  return NextResponse.json({ success: !error });
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ success: true });
 }

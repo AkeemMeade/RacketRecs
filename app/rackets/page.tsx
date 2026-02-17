@@ -3,6 +3,7 @@
 import { Outfit, Roboto } from "next/font/google";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { useUser } from "@/lib/UserContext";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -20,6 +21,7 @@ interface Racket {
 }
 
 export default function RacketsPage() {
+  const { user, loading: userLoading } = useUser();
   const [rackets, setRackets] = useState<Racket[]>([]);
   const [filteredRackets, setFilteredRackets] = useState<Racket[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -241,14 +243,39 @@ export default function RacketsPage() {
                  <div key={racket.racket_id} className="relative">
                    {/* Favorite Button - Outside the Link */}
                    <button
-                     onClick={() => {
-                       const newFavorites = new Set(clickedRackets);
-                       if (newFavorites.has(racket.racket_id)) {
-                         newFavorites.delete(racket.racket_id);
-                       } else {
-                         newFavorites.add(racket.racket_id);
+                     onClick={async () => {
+                       if (!user) {
+                         alert("Please sign in to add favorites");
+                         return;
                        }
-                       setClickedRackets(newFavorites);
+
+                       const isFavorited = clickedRackets.has(racket.racket_id);
+                       
+                       try {
+                         const response = await fetch("/api/rackets/fav", {
+                           method: isFavorited ? "DELETE" : "POST",
+                           headers: { "Content-Type": "application/json" },
+                           body: JSON.stringify({
+                             racketId: racket.racket_id,
+                             userId: user.id,
+                           }),
+                         });
+
+                         if (!response.ok) {
+                           throw new Error("Failed to update favorite");
+                         }
+
+                         const newFavorites = new Set(clickedRackets);
+                         if (isFavorited) {
+                           newFavorites.delete(racket.racket_id);
+                         } else {
+                           newFavorites.add(racket.racket_id);
+                         }
+                         setClickedRackets(newFavorites);
+                       } catch (err) {
+                         console.error("Error updating favorite:", err);
+                         alert("Failed to update favorite. Please try again.");
+                       }
                      }}
                      className="absolute top-3 right-3 z-10 p-1 hover:scale-110 transition-transform"
                    >
