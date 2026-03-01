@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Outfit } from "next/font/google";
-
+import Link from "next/link";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -62,6 +62,14 @@ export default function ProfilePage() {
             <SectionCard
               title="Personal Information"
               subtitle="User details will populate here."
+                right={
+                <Link
+                  href="/preferences"
+                  className="rounded-full bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-amber-300"
+                >
+                  Preferences
+                </Link>
+              }
             >
               <div className="rounded-xl bg-slate-50 px-4 py-6 text-center ring-1 ring-slate-100">
                 <p className="text-sm text-slate-500">
