@@ -87,6 +87,7 @@ export default function RacketsPage() {
     selectedWeightRanges,
   ]);
 
+  // get rackets from api route
   const fetchRackets = async () => {
     try {
       setLoading(true);

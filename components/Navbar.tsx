@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { Outfit } from "next/font/google";
+import { useNavbar } from "./ui/navbar-context";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -7,11 +10,13 @@ const outfit = Outfit({
 });
 
 export function Navbar() {
+  const { open } = useNavbar();
   return (
     <>
       {/* Nav bar */}
-      <nav className={`${outfit.className} flex justify-between items-center px-8 py-4 bg-transparent `}>
-        <Link className="font-extrabold text-3xl uppercase" href="/">
+      <nav className={`${outfit.className} flex justify-between items-center px-8 py-4 bg-transparent transition-all duration-300 z-40`}
+>
+        <Link className="font-extrabold text-3xl uppercase ml-15" href="/">
           RacketRecs
         </Link>
         <div className="flex items-center gap-8">
@@ -31,7 +36,9 @@ export function Navbar() {
       </nav>
 
       {/*Nav bar separator*/}
-      <div className="w-full h-1 bg-[#FFC038]"></div>
+      <div 
+        className="right-0 h-1 bg-[#FFC038] transition-all duration-300 z-40"
+        style={{ left: open ? "18rem" : "5rem", top: "60px" }}></div>
     </>
   );
 }

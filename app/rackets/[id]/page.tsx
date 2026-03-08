@@ -27,6 +27,7 @@ export default function RacketDetails({
   const [racket, setRacket] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
+  // fetch rackets
   useEffect(() => {
     async function fetchRacket() {
       const { data } = await supabase
