@@ -3,6 +3,7 @@
 import { Outfit, Roboto } from "next/font/google";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { useUser } from "@/lib/UserContext";
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import TuneIcon from '@mui/icons-material/Tune';
@@ -18,10 +19,11 @@ interface Racket {
   balance: string;
   weight: string;
   manufacturer_id: string;
-  img_url?: string;
+  img_url: string;
 }
 
 export default function RacketsPage() {
+  const { user, loading: userLoading } = useUser();
   const [rackets, setRackets] = useState<Racket[]>([]);
   const [filteredRackets, setFilteredRackets] = useState<Racket[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -31,6 +33,7 @@ export default function RacketsPage() {
   const [selectedManufacturers, setSelectedManufacturers] = useState<string[]>([],);
   const [selectedWeightRanges, setSelectedWeightRanges] = useState<string[]>([],);
   const [showFilters, setShowFilters] = useState(false);
+  const [clickedRackets, setClickedRackets] = useState<Set<string>>(new Set());
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 16;
@@ -108,6 +111,23 @@ export default function RacketsPage() {
   const handleClearSearch = () => {
     setSearchQuery("");
   };
+
+  const handleFavorite = async (racketId: string) => {
+    const newFavorites = new Set(clickedRackets);
+    const isFavorited = newFavorites.has(racketId);
+  
+  // Send to database
+  await fetch("/api/rackets/fav", {
+    method: isFavorited ? "DELETE" : "POST",
+    body: JSON.stringify({ racketId, userId: "current_user_id" }), // Replace with actual user ID
+    headers: { "Content-Type": "application/json" },
+  });
+  
+  // Update local state
+  if (isFavorited) newFavorites.delete(racketId);
+  else newFavorites.add(racketId);
+  setClickedRackets(newFavorites);
+};
 
   // fix unpatched name values by truncating to first 3 words
   const truncate = (name: string, wordCount: number = 4): string => {
@@ -208,69 +228,114 @@ export default function RacketsPage() {
             </div>
           )}
 
-          {/* Gallery Grid */}
-          {!loading && filteredRackets.length > 0 && (
-            <>
-              <div className="grid grid-cols-4 gap-8">
-                {currentRackets.map((racket) => (
-                  <Link
-                    key={racket.racket_id}
-                    href={`/rackets/${racket.racket_id}`}
-                    className="group"
-                  >
-                    <div
-                      className={`${outfit.className} bg-white rounded-xl p-6 shadow-md hover:shadow-xl transition-all duration-300 border 
-                        border-gray-200 group-hover:border-blue-400`}
-                    >
-                      <img
-                        src={racket.img_url || "/placeholder-racket.png"}
-                        alt={racket.name}
-                        className="w-full h-48 object-contain mb-4 group-hover:scale-105 transition-transform duration-300"
-                      />
-                      <h3 className="text-center font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
-                        {truncate(racket.name || "", 3)}
-                      </h3>
-                    </div>
-                  </Link>
-                ))}
-              </div>
+      {/* Gallery Grid */}
+      {!loading && filteredRackets.length > 0 && (
+      <>
+      <div className="grid grid-cols-4 gap-8">
+      {currentRackets.map((racket) => (
+      <div key={racket.racket_id} className="relative">
 
-              {/* Pages */}
-              <div className="flex justify-center items-center gap-4 mt-8">
-                <button
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.max(prev - 1, 1))
-                  }
-                  disabled={currentPage === 1}
-                  className={`px-4 py-2 rounded-full ${
-                    currentPage === 1
-                      ? "bg-gray-300 cursor-not-allowed"
-                      : "bg-[#FFC038] text-black hover:bg-[#FFB800] hover:cursor-pointer"
-                  }`}
-                >
-                  Previous
-                </button>
+      {/* Favorite Button */}
+      <button
+      onClick={async () => {
+      if (!user) {
+      alert("Please sign in to add favorites");
+      return;
+      }
 
-                <span className="text-gray-700">
-                  Page {currentPage} of {totalPages}
-                </span>
+      const isFavorited = clickedRackets.has(racket.racket_id);
 
-                <button
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                  }
-                  disabled={currentPage === totalPages}
-                  className={`px-4 py-2 rounded-full ${
-                    currentPage === totalPages
-                      ? "bg-gray-300 cursor-not-allowed"
-                      : "bg-[#FFC038] text-black hover:bg-[#FFB800] hover:cursor-pointer"
-                  }`}
-                >
-                  Next
-                </button>
-              </div>
-            </>
-          )}
+      try {
+      const response = await fetch("/api/rackets/fav", {
+      method: isFavorited ? "DELETE" : "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        racketId: racket.racket_id,
+        userId: user.id,
+      }),
+      });
+
+      if (!response.ok) throw new Error("Failed to update favorite");
+
+      const newFavorites = new Set(clickedRackets);
+      if (isFavorited) {
+      newFavorites.delete(racket.racket_id);
+      } else {
+      newFavorites.add(racket.racket_id);
+      }
+      setClickedRackets(newFavorites);
+      } catch (err) {
+      console.error("Error updating favorite:", err);
+      alert("Failed to update favorite. Please try again.");
+      }
+      }}
+      className="absolute top-3 right-3 z-10 p-1 hover:scale-110 transition-transform"
+      >
+      <svg
+      className="w-6 h-6"
+      fill={clickedRackets.has(racket.racket_id) ? "#FBBF24" : "#D1D5DB"}
+      viewBox="0 0 20 20"
+      >
+      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+      </svg>
+      </button>
+
+      {/* Card Link */}
+      <Link
+      href={`/rackets/${racket.racket_id}`}
+      className="group block"
+      >
+      <div
+      className={`${outfit.className} bg-white rounded-xl p-6 shadow-md hover:shadow-xl transition-all duration-300 border 
+      border-gray-200 group-hover:border-blue-400`}
+      >
+      <img
+      src={racket.img_url || "/placeholder-racket.png"}
+      alt={racket.name}
+      className="w-full h-48 object-contain mb-4 group-hover:scale-105 transition-transform duration-300"
+      />
+      <h3 className="text-center font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+      {truncate(racket.name || "", 3)}
+      </h3>
+      </div>
+      </Link>
+
+      </div>
+      ))}
+      </div>
+
+      {/* Pagination */}
+      <div className="flex justify-center items-center gap-4 mt-8">
+      <button
+      onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+      disabled={currentPage === 1}
+      className={`px-4 py-2 rounded-full ${
+      currentPage === 1
+      ? "bg-gray-300 cursor-not-allowed"
+      : "bg-[#FFC038] text-black hover:bg-[#FFB800] hover:cursor-pointer"
+      }`}
+      >
+      Previous
+      </button>
+
+      <span className="text-gray-700">
+      Page {currentPage} of {totalPages}
+      </span>
+
+      <button
+      onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+      disabled={currentPage === totalPages}
+      className={`px-4 py-2 rounded-full ${
+      currentPage === totalPages
+      ? "bg-gray-300 cursor-not-allowed"
+      : "bg-[#FFC038] text-black hover:bg-[#FFB800] hover:cursor-pointer"
+      }`}
+      >
+      Next
+      </button>
+      </div>
+      </>
+      )}
         </div>
       </div>
     </>
