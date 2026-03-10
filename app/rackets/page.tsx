@@ -48,6 +48,25 @@ export default function RacketsPage() {
   }, []);
 
   useEffect(() => {
+  if (!user) return;
+
+  const fetchFavorites = async () => {
+    try {
+      const res = await fetch(`/api/rackets/fav?userId=${user.id}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      // Assuming the API returns an array of racket IDs or objects with racket_id
+      const favoriteIds = data.map((fav: { racket_id: string }) => fav.racket_id);  
+      setClickedRackets(new Set(favoriteIds));
+    } catch (err) {
+      console.error("Failed to load favorites:", err);
+    }
+  };
+
+  fetchFavorites();
+}, [user]); // Re-runs when user logs in
+
+  useEffect(() => {
     let filtered = rackets;
 
     // Apply search query filter
@@ -112,14 +131,14 @@ export default function RacketsPage() {
     setSearchQuery("");
   };
 
-  const handleFavorite = async (racketId: string) => {
-    const newFavorites = new Set(clickedRackets);
-    const isFavorited = newFavorites.has(racketId);
+  const handleFavorite = async (racketId: string) => {  // This function is called when a user clicks the favorite button on a racket card. It first checks if the user is logged in, and if not, it shows an alert asking them to sign in. Then it creates a new Set based on the current clickedRackets state to avoid mutating state directly. It check if the clicked racket is already favorited by checking if its ID is in the Set. Depending on whether the racket is currently favorited or not, it sends a POST or DELETE request to the server to update the user's favorites in the database. After the server responds, it updates the local state by either adding or removing the racket ID from the Set and then updating the clic
+    const newFavorites = new Set(clickedRackets); // Create a new Set to avoid mutating state directly
+    const isFavorited = newFavorites.has(racketId); // Check if the racket is currently favorited
   
-  // Send to database
+  // What does this do? it sends a request to the server(either POST or DELETE depending on whether the racket is currently favorited) to update the user's favorites in the database. The request includes the racket ID and a placeholder user ID("current_user_id"). After the server responds, it updates the local state to reflect the change in favorites by either adding or removing the racket ID from the clickedRackets set.
   await fetch("/api/rackets/fav", {
-    method: isFavorited ? "DELETE" : "POST",
-    body: JSON.stringify({ racketId, userId: "current_user_id" }), // Replace with actual user ID
+    method: isFavorited ? "DELETE" : "POST",  //
+    body: JSON.stringify({ racketId, userId: "current_user_id" }),
     headers: { "Content-Type": "application/json" },
   });
   
@@ -235,7 +254,7 @@ export default function RacketsPage() {
       {currentRackets.map((racket) => (
       <div key={racket.racket_id} className="relative">
 
-      {/* Favorite Button */}
+      Favorite Button
       <button
       onClick={async () => {
       if (!user) {
