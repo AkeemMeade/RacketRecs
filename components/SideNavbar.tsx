@@ -45,10 +45,9 @@ export function SideNavbar() {
 
         <ul className="pt-20 z-30">
           {Menus.map((menu, index) => (
-            <>
               <li
                 key={index}
-                className={` ${outfit.className} text-black     font-semibold p-2 flex hover:bg-amber-500 rounded-lg
+                className={` ${outfit.className} text-black font-semibold p-2 flex hover:bg-amber-500 rounded-lg
                  cursor-pointer gap-x-4 items-center transition-all duration-50 mb-4 ${menu.spacing ? "mt-10" : ""} ${open ? "justify-start" : "justify-center"}`}
               >
                 <Link href={menu.href} className="flex w-full">
@@ -57,10 +56,9 @@ export function SideNavbar() {
                     {menu.icon}
                   </span>
 
-                  <span className={`ml-2 ${open ? "block" : "hidden"} ${outfit.className} text-white`}>{menu.title}</span>
+                  <span className={`ml-2 ${open ? "block" : "hidden"} ${outfit.className} text-black`}>{menu.title}</span>
                 </Link>
               </li>
-            </>
           ))}
         </ul>
       </div>
