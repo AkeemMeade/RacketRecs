@@ -1,23 +1,18 @@
 "use client";
 
 import { useState, useEffect, use } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/client";
+
 import { Outfit, Roboto } from "next/font/google";
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderOutlinedIcon from '@mui/icons-material/FavoriteBorderOutlined';
 import { useUser } from "@/lib/UserContext";
-
-
+import Link from "next/link";
 
 const outfit = Outfit({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
 });
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-);
 
 export default function RacketDetails({
   params,
@@ -25,6 +20,7 @@ export default function RacketDetails({
   params: Promise<{ id: string }>;
 }) {
 
+  const supabase = createClient();
   const { id } = use(params);
   const { user } = useUser();
   const [clickedRackets, setClickedRackets] = useState<Set<string>>(new Set());
@@ -108,7 +104,7 @@ export default function RacketDetails({
             <button className="ml-135"
               onClick={async () => {
               if(!user) {
-                alert("Please sign in to add favorites");
+                <Link href="/sign-in">Please sign in to add favorites</Link>
                 return;
               }
               const isFavorited = clickedRackets.has(racket.racket_id);

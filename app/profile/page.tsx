@@ -76,7 +76,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <main className={`${outfit.className} min-h-screen`}>
+    <main className={`${outfit.className} min-h-screen -mt-25`}>
       <div className="fixed inset-0 bg-gradient-to-b from-blue-400 via-blue-300 to-blue-200 -z-10" />
       <div className="mx-auto w-full max-w-6xl px-4 py-10"></div>
       <div className="mx-auto w-full max-w-6xl px-4 py-10">
