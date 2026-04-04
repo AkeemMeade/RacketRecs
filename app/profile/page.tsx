@@ -1,8 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Outfit } from "next/font/google";
-
+import { useUser } from "@/lib/UserContext";
+import Link from "next/link";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -25,23 +26,57 @@ function SectionCard({
       <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-6 py-5">
         <div>
           <h2 className="text-lg font-extrabold text-slate-900">{title}</h2>
-          {subtitle && (
-            <p className="mt-1 text-sm text-slate-600">{subtitle}</p>
-          )}
+          {subtitle && <p className="mt-1 text-sm text-slate-600">{subtitle}</p>}
         </div>
-
         {right && <div className="shrink-0">{right}</div>}
       </div>
-
       <div className="px-6 py-5">{children}</div>
     </div>
   );
 }
 
+interface Favorite {
+  racket_id: string;
+  rackets: {
+    name: string;
+    img_url: string;
+  };
+}
+
 export default function ProfilePage() {
+  const { user } = useUser();
+  const [favorites, setFavorites] = useState<Favorite[]>([]);
+  const [loadingFavs, setLoadingFavs] = useState(true);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchFavorites = async () => {
+      try {
+        const res = await fetch(`/api/rackets/fav?userId=${user.id}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        setFavorites(data);
+      } catch (err) {
+        console.error("Failed to load favorites:", err);
+      } finally {
+        setLoadingFavs(false);
+      }
+    };
+
+    fetchFavorites();
+  }, [user]);
+
+  const truncate = (name: string, wordCount = 3): string => {
+    const words = name.split("-");
+    return words
+      .slice(0, wordCount)
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ");
+  };
+
   return (
     <main className={`${outfit.className} min-h-screen`}>
-
       <div className="fixed inset-0 bg-gradient-to-b from-blue-400 via-blue-300 to-blue-200 -z-10" />
       <div className="mx-auto w-full max-w-6xl px-4 py-10"></div>
       <div className="mx-auto w-full max-w-6xl px-4 py-10">
@@ -51,8 +86,8 @@ export default function ProfilePage() {
             My Profile
           </h1>
           <p className="mt-2 max-w-2xl text-white/90">
-            Your account dashboard will appear here once authentication and
-            user data are connected.
+            Your account dashboard will appear here once authentication and user
+            data are connected.
           </p>
         </div>
 
@@ -64,21 +99,47 @@ export default function ProfilePage() {
               subtitle="User details will populate here."
             >
               <div className="rounded-xl bg-slate-50 px-4 py-6 text-center ring-1 ring-slate-100">
-                <p className="text-sm text-slate-500">
-                  No user data loaded.
-                </p>
+                <p className="text-sm text-slate-500">No user data loaded.</p>
               </div>
             </SectionCard>
 
+            {/* Favorites */}
             <SectionCard
               title="Favorites"
-              subtitle="Saved rackets will appear here."
+              subtitle={`${favorites.length} saved racket${favorites.length !== 1 ? "s" : ""}`}
             >
-              <div className="rounded-xl bg-slate-50 px-4 py-6 text-center ring-1 ring-slate-100">
-                <p className="text-sm text-slate-500">
-                  No favorites yet.
-                </p>
-              </div>
+              {loadingFavs ? (
+                <div className="flex justify-center py-6">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+                </div>
+              ) : !user ? (
+                <div className="rounded-xl bg-slate-50 px-4 py-6 text-center ring-1 ring-slate-100">
+                  <p className="text-sm text-slate-500">Sign in to see favorites.</p>
+                </div>
+              ) : favorites.length === 0 ? (
+                <div className="rounded-xl bg-slate-50 px-4 py-6 text-center ring-1 ring-slate-100">
+                  <p className="text-sm text-slate-500">No favorites yet.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {favorites.map((fav) => (
+                    <Link
+                      key={fav.racket_id}
+                      href={`/rackets/${fav.racket_id}`}
+                      className="flex items-center gap-3 rounded-xl bg-slate-50 px-4 py-3 ring-1 ring-slate-100 hover:ring-blue-400 hover:bg-blue-50 transition"
+                    >
+                      <img
+                        src={fav.rackets?.img_url || "/placeholder-racket.png"}
+                        alt={fav.rackets?.name}
+                        className="h-12 w-12 object-contain shrink-0"
+                      />
+                      <span className="text-sm font-semibold text-slate-800">
+                        {truncate(fav.rackets?.name || "", 3)}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              )}
             </SectionCard>
           </div>
 
@@ -89,9 +150,7 @@ export default function ProfilePage() {
               subtitle="Assessment results will display here."
             >
               <div className="rounded-xl bg-slate-50 px-4 py-6 text-center ring-1 ring-slate-100">
-                <p className="text-sm text-slate-500">
-                  Assessment data not available.
-                </p>
+                <p className="text-sm text-slate-500">Assessment data not available.</p>
               </div>
             </SectionCard>
 
@@ -100,9 +159,7 @@ export default function ProfilePage() {
               subtitle="Personalized racket recommendations will appear here."
             >
               <div className="rounded-xl bg-slate-50 px-4 py-6 text-center ring-1 ring-slate-100">
-                <p className="text-sm text-slate-500">
-                  No recommendations yet.
-                </p>
+                <p className="text-sm text-slate-500">No recommendations yet.</p>
               </div>
             </SectionCard>
           </div>
