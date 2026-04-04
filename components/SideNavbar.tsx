@@ -10,6 +10,7 @@ import { FaRegThumbsUp } from "react-icons/fa6";
 import { FaRegCheckSquare } from "react-icons/fa";
 import { FaGear } from "react-icons/fa6";
 import { FaSignOutAlt } from "react-icons/fa";
+import { FaSearch } from "react-icons/fa";
 import { useUser } from "@/lib/UserContext";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
@@ -32,6 +33,8 @@ const Menus = [
     href: "/assessment",
     icon: <FaRegCheckSquare size={24} />,
   },
+  // search
+  { title: "Search", href: "/rackets", icon: <FaSearch size={22} /> },
 ];
 
 const BottomMenus = [
