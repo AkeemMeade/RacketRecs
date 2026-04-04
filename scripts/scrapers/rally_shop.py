@@ -167,6 +167,18 @@ def extract_key_identifiers(name: str) -> List[str]:
     
     return key_tokens 
 
+def normalize_product_name(name: str) -> str:
+    """
+    Normalize product names from kebab-case (dashes) to proper title case with spaces.
+    Example: "yonex-nanoflare-700-tour-limited-edition-badminton-racket" 
+    becomes "Yonex Nanoflare 700 Tour Limited Edition Badminton Racket"
+    """
+    # Convert dashes to spaces
+    name = name.replace('-', ' ')
+    # Apply title case
+    name = name.title()
+    return name
+
 def fuzzy_match_score(name1: str, name2: str) -> float:
     """
     Calculate match score between two racket names.
@@ -197,7 +209,7 @@ def fuzzy_match_score(name1: str, name2: str) -> float:
     
     return final_score
 
-class YumoScraper:
+class RallyShopBadmintonScraper:
     def __init__(self, supabase_url: str = None, supabase_key: str = None):
         """Initialize scraper with optional Supabase connection"""
         self.headers = {
@@ -205,7 +217,6 @@ class YumoScraper:
         }
         self.session = requests.Session()
         self.delay = 2  # seconds between requests
-        self.CAD_TO_USD = 0.73  # Conversion rate
         
         # Initialize Supabase client
         self.supabase = None
@@ -233,7 +244,7 @@ class YumoScraper:
         self.retailer_id = None
         if self.supabase:
             self._load_retailer()
-
+        
     def _load_manufacturers(self):
         """Load manufacturers into memory for quick lookup"""
         try:
@@ -244,17 +255,17 @@ class YumoScraper:
             print(f"Could not load manufacturers: {e}")
 
     def _load_retailer(self):
-        """Load Yumobadminton retailer ID"""
+        """Load therallyshop retailer ID"""
         try:
-            response = self.supabase.table('retailer').select('*').eq('name', 'yumo').execute()
+            response = self.supabase.table('retailer').select('*').eq('name', 'therallyshop').execute()
             if response.data:
                 self.retailer_id = response.data[0]['retailer_id']
-                print(f"Loaded retailer: yumo (ID: {self.retailer_id})")
+                print(f"Loaded retailer: therallyshop (ID: {self.retailer_id})")
             else:
-                print(" Retailer 'yumo' not found in database")
+                print("  Retailer 'therallyshop' not found in database")
         except Exception as e:
-            print(f"Could not load retailer: {e}")
-        
+            print(f"Could not load retailer: {e}")    
+
     def link_racket_to_retailer(self, racket_id: int, price_usd: float, product_url: str) -> bool:
         """
         Create or update racket_retailer entry for this racket.
@@ -290,7 +301,7 @@ class YumoScraper:
                     'price': price_usd,
                     'product_url': product_url
                 }).execute()
-                print(f"       Linked to yumo: ${price_usd:.2f}")
+                print(f"       Linked to therallyshop: ${price_usd:.2f}")
             
             return True
         except Exception as e:
@@ -310,6 +321,15 @@ class YumoScraper:
 
     def get_manufacturer_id(self, brand_name: str) -> int:
         """Get manufacturer_id for a brand name"""
+        if not hasattr(self, 'manufacturers'):
+            self.manufacturers = {}
+            if self.supabase:
+                try:
+                    response = self.supabase.table('manufacturer').select('*').execute()
+                    self.manufacturers = {m['name']: m['manufacturer_id'] for m in response.data}
+                except Exception as e:
+                    print(f"Could not load manufacturers: {e}")
+        
         return self.manufacturers.get(brand_name)
 
     def fetch_page(self, url: str) -> BeautifulSoup:
@@ -324,15 +344,15 @@ class YumoScraper:
             print(f"Error fetching {url}: {e}")
             return None
     
-    def scrape_yumo_rackets(self) -> List[Dict]:
+    def scrape_rallyshop_rackets(self) -> List[Dict]:
         """
-        Scrape all badminton racket names from yumo.ca
+        Scrape all badminton racket names from therallyshop.com
         Returns a list of dicts with `name` and `url`
         Deduplicates by base product URL to avoid color/variant duplicates
         """
         rackets = []
         seen_urls = set()  # Track unique base URLs
-        base_url = "https://yumo.ca/collections/badminton-rackets"
+        base_url = "https://therallyshop.com/collections/badminton-rackets"
         page = 1
         
         while True:
@@ -345,7 +365,7 @@ class YumoScraper:
             if not soup:
                 break
             
-            # Find all product links - adjust selectors based on yumo.ca structure
+            # Find all product links - adjust selectors based on therallyshop.com structure
             product_links = soup.find_all('a', href=lambda x: x and '/products/' in x)
             
             if not product_links:
@@ -372,13 +392,20 @@ class YumoScraper:
                 # Remove common non-product text
                 name = re.sub(r'\s*(sold out|out of stock|unavailable)\s*', '', name, flags=re.IGNORECASE).strip()
                 
+                # Normalize name format (convert dashes to spaces, apply title case)
+                name = normalize_product_name(name)
+                
                 # Additional filtering: if name is too short or seems wrong, try alternatives
                 if not name or len(name) < 5:
                     name = link.get('title', '').strip()
+                    if name:
+                        name = normalize_product_name(name)
                 
                 if not name or len(name) < 5:
                     # Fallback to URL slug
                     name = base_product_url.rstrip('/').split('/')[-1]
+                    if name:
+                        name = normalize_product_name(name)
                 
                 # Final check: skip if name is obviously wrong
                 if any(x in name.lower() for x in ['sold out', 'out of stock', 'unavailable']):
@@ -450,9 +477,8 @@ class YumoScraper:
         if price_text:
             m = re.search(r'([0-9]+(?:[\.,][0-9]{2})?)', price_text.replace(',', ''))
             if m:
-                cad_price = float(m.group(1).replace(',', ''))
-                usd_price = round(cad_price * self.CAD_TO_USD, 2)  #  conversion rate
-                details['price'] = usd_price
+                price = float(m.group(1).replace(',', ''))
+                details['price'] = price
 
         # Extract main product image URL
         image_url = None
@@ -505,9 +531,8 @@ class YumoScraper:
         if not details.get('price') and description_text:
             m = re.search(r'\$\s*([0-9]+(?:[\.,][0-9]{2})?)', description_text)
             if m:
-                cad_price = float(m.group(1).replace(',', ''))
-                usd_price = round(cad_price * 0.75, 2)  #  conversion rate
-                details['price'] = usd_price
+                price = float(m.group(1).replace(',', ''))
+                details['price'] = price
 
         #    IMPROVED STRING TENSION EXTRACTION 
         # Try to extract string tension from specs or description if missing
@@ -884,7 +909,7 @@ class YumoScraper:
         
         specs = new_racket_data.get('specifications', {})
         
-        # Parse price (already in USD for Yumo Badminton - uses CAD * 0.75 conversion)
+        # Parse price (already in USD for Rally Shop)
         price = new_racket_data.get('price')
         if isinstance(price, str):
             try:
@@ -926,7 +951,6 @@ class YumoScraper:
         except Exception as e:
             print(f"   Error adding new racket {new_racket_data['name']}: {e}")
             return False
-
     
     def normalize_specifications(self, data: List[Dict]) -> List[Dict]:
         """
@@ -1165,15 +1189,15 @@ def main():
     supabase_key = os.getenv('NEXT_PUBLIC_SUPABASE_ANON_KEY')
     
     # Initialize scraper
-    scraper = YumoScraper(supabase_url, supabase_key)
+    scraper = RallyShopBadmintonScraper(supabase_url, supabase_key)
     
     print("=" * 70)
-    print("Yumo Badminton Racket Scraper ")
+    print("The Rally Shop Badminton Racket Scraper - Smart Database Updater")
     print("=" * 70)
     
     # Scrape racket listings
-    print("\nScraping badminton rackets from yumo.ca...")
-    racket_entries = scraper.scrape_yumo_rackets()
+    print("\nScraping badminton rackets from therallyshop.com...")
+    racket_entries = scraper.scrape_rallyshop_rackets()
 
     if not racket_entries:
         print(" No rackets found. Check if the site is accessible and selectors are correct.")
@@ -1247,7 +1271,7 @@ def main():
                 
                 if price and product_url:
                     scraper.link_racket_to_retailer(existing_racket['racket_id'], price, product_url)
-                    
+
             else:
                 # Add to new rackets list
                 new_rackets_to_add.append(normalized)
@@ -1282,7 +1306,7 @@ def main():
         'statistics': stats,
     }
     
-    summary_file = os.path.join(gathering_dir, f'yumo_scraper_summary_{timestamp}.json')
+    summary_file = os.path.join(gathering_dir, f'rallyshop_scraper_summary_{timestamp}.json')
     with open(summary_file, 'w', encoding='utf-8') as f:
         json.dump(summary, f, indent=2, ensure_ascii=False)
     
@@ -1302,9 +1326,9 @@ def main():
 def test_component_matching():
     """
     Utility function to test prefix-based matching.
-    Run with: python yumo_scraper.py test
+    Run with: python rallyshop_scraper.py test
     """
-    scraper = YumoScraper()
+    scraper = RallyShopBadmintonScraper()
     
     # Test cases showing how the same racket should match across different names
     test_cases = [
@@ -1362,12 +1386,8 @@ def test_component_matching():
 if __name__ == "__main__":
     import sys
     
-    # Allow running tests with: python yumo_scraper.py test
-    # Or diagnostics with: python yumo_scraper.py diagnose
     if len(sys.argv) > 1 and sys.argv[1].lower() == 'test':
         test_component_matching()
-    elif len(sys.argv) > 1 and sys.argv[1].lower() == 'diagnose':
-        diagnose_database_names()
     else:
         main()
 

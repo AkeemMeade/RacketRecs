@@ -223,6 +223,94 @@ class JoyBadmintonScraper:
         else:
             print("Supabase credentials not provided")
         
+        # Cache manufacturers
+        self.manufacturers = {}
+        if self.supabase:
+            self._load_manufacturers()
+        
+        # Load retailer ID
+        self.retailer_id = None
+        if self.supabase:
+            self._load_retailer()
+
+    def _load_manufacturers(self):
+        """Load manufacturers into memory for quick lookup"""
+        try:
+            response = self.supabase.table('manufacturer').select('*').execute()
+            self.manufacturers = {m['name']: m['manufacturer_id'] for m in response.data}
+            print(f"Loaded {len(self.manufacturers)} manufacturers")
+        except Exception as e:
+            print(f"Could not load manufacturers: {e}")
+
+    def _load_retailer(self):
+        """Load joybadminton retailer ID"""
+        try:
+            response = self.supabase.table('retailer').select('*').eq('name', 'joybadminton').execute()
+            if response.data:
+                self.retailer_id = response.data[0]['retailer_id']
+                print(f"Loaded retailer: joybadminton (ID: {self.retailer_id})")
+            else:
+                print(" Retailer 'joybadminton' not found in database")
+        except Exception as e:
+            print(f"Could not load retailer: {e}")
+        
+    def link_racket_to_retailer(self, racket_id: int, price_usd: float, product_url: str) -> bool:
+        """
+        Create or update racket_retailer entry for this racket.
+        
+        Args:
+            racket_id: ID of racket in racket table
+            price_usd: Price in USD
+            product_url: Full URL to product page
+        """
+        if not self.supabase or not self.retailer_id:
+            return False
+        
+        try:
+            # Check if link already exists
+            existing = self.supabase.table('racket_retailer').select('*').eq(
+                'racket_id', racket_id
+            ).eq(
+                'retailer_id', self.retailer_id
+            ).execute()
+            
+            if existing.data:
+                # Update existing entry (price might have changed)
+                self.supabase.table('racket_retailer').update({
+                    'price': price_usd,
+                    'product_url': product_url
+                }).eq('id', existing.data[0]['id']).execute()
+                print(f"       Updated retailer link: ${price_usd:.2f}")
+            else:
+                # Create new entry
+                self.supabase.table('racket_retailer').insert({
+                    'racket_id': racket_id,
+                    'retailer_id': self.retailer_id,
+                    'price': price_usd,
+                    'product_url': product_url
+                }).execute()
+                print(f"       Linked to joybadminton: ${price_usd:.2f}")
+            
+            return True
+        except Exception as e:
+            print(f"       Error linking to retailer: {e}")
+            return False
+
+    def extract_brand_from_racket_name(self, racket_name: str) -> str:
+        """Extract brand from racket name using KNOWN_BRANDS"""
+        name_lower = racket_name.lower()
+        
+        # Check KNOWN_BRANDS (longest first)
+        for brand_key in sorted(KNOWN_BRANDS.keys(), key=len, reverse=True):
+            if brand_key in name_lower:
+                return KNOWN_BRANDS[brand_key]
+        
+        return None
+
+    def get_manufacturer_id(self, brand_name: str) -> int:
+        """Get manufacturer_id for a brand name"""
+        return self.manufacturers.get(brand_name)
+
     def fetch_page(self, url: str) -> BeautifulSoup:
         """Fetch a page and return BeautifulSoup object"""
         try:
@@ -303,7 +391,7 @@ class JoyBadmintonScraper:
             page += 1
             
             # Safety check to avoid infinite loop
-            if page > 20:
+            if page > 15:
                 break
         
         return rackets
@@ -788,14 +876,14 @@ class JoyBadmintonScraper:
     
     def add_new_racket(self, new_racket_data: Dict) -> bool:
         """
-        Add a new racket to the database.
+        Add a new racket to the database and link to retailer.
         """
         if not self.supabase:
             return False
         
         specs = new_racket_data.get('specifications', {})
         
-        # Parse price
+        # Parse price (already in USD for Joy Badminton - uses CAD * 0.75 conversion)
         price = new_racket_data.get('price')
         if isinstance(price, str):
             try:
@@ -803,14 +891,18 @@ class JoyBadmintonScraper:
             except:
                 price = None
         
+        # Extract brand and get manufacturer_id
+        brand = self.extract_brand_from_racket_name(new_racket_data['name'])
+        manufacturer_id = self.get_manufacturer_id(brand) if brand else None
+        
         racket_record = {
             'name': new_racket_data['name'],
+            'manufacturer_id': manufacturer_id,
             'color': specs.get('Color'),
             'balance': specs.get('Balance'),
             'stiffness': specs.get('Shaft Flexibility'),
             'weight': specs.get('Weight'),
             'max_tension': specs.get('Maximum Racket Tension'),
-            'price': price,
             'img_url': new_racket_data.get('image_url'),
             'description': new_racket_data.get('description'),
         }
@@ -819,8 +911,16 @@ class JoyBadmintonScraper:
         racket_record = {k: v for k, v in racket_record.items() if v is not None}
         
         try:
-            print(f"  Adding new racket: {new_racket_data['name']}")
+            print(f"   Adding new racket: {new_racket_data['name']} (Brand: {brand})")
             response = self.supabase.table('racket').insert(racket_record).execute()
+            
+            # Get the newly created racket_id
+            new_racket_id = response.data[0]['racket_id']
+            
+            # Link to retailer with price and URL
+            if price and new_racket_data.get('url'):
+                self.link_racket_to_retailer(new_racket_id, price, new_racket_data['url'])
+            
             return True
         except Exception as e:
             print(f"   Error adding new racket {new_racket_data['name']}: {e}")
@@ -1075,10 +1175,10 @@ def main():
     racket_entries = scraper.scrape_joybadminton_rackets()
 
     if not racket_entries:
-        print("✗ No rackets found. Check if the site is accessible and selectors are correct.")
+        print(" No rackets found. Check if the site is accessible and selectors are correct.")
         return
     
-    print(f"\n✓ Found {len(racket_entries)} unique racket entries")
+    print(f"\n Found {len(racket_entries)} unique racket entries")
     print("Sample rackets:")
     for entry in racket_entries[:5]:
         print(f"  - {entry['name']}")
@@ -1140,6 +1240,13 @@ def main():
                     if scraper.update_missing_specs(existing_racket['racket_id'], existing_racket, specs):
                         stats['specs_updated'] += 1
                         print(f"  Updated missing specs: {', '.join(missing_fields)}")
+
+                price = normalized.get('price')
+                product_url = entry.get('url')
+                
+                if price and product_url:
+                    scraper.link_racket_to_retailer(existing_racket['racket_id'], price, product_url)
+                    
             else:
                 # Add to new rackets list
                 new_rackets_to_add.append(normalized)
