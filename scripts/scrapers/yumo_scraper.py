@@ -27,9 +27,9 @@ class BadmintonRacketScraper:
             print(f"Error fetching {url}: {e}")
             return None
     
-    def scrape_joybadminton_rackets(self) -> List[str]:
+    def scrape_yumobadminton_rackets(self) -> List[str]:
         """
-        Scrape all badminton racket names from joybadminton.com
+        Scrape all badminton racket names from yumo.ca
         Returns a list of dicts with `name` and `url`
         Deduplicates by base product URL to avoid color/variant duplicates
         """
@@ -488,7 +488,7 @@ if __name__ == "__main__":
     print("=" * 50)
     
     print("Scraping all badminton racket entries from Yumo.com...")
-    racket_entries = scraper.scrape_joybadminton_rackets()
+    racket_entries = scraper.scrape_yumobadminton_rackets()
 
     print(f"\nFound {len(racket_entries)} unique racket entries:")
     print("=" * 50)
