@@ -23,7 +23,7 @@ interface Racket {
 }
 
 export default function RacketsPage() {
-  const { user, loading: userLoading } = useUser();
+  const { user } = useUser(); 
   const [rackets, setRackets] = useState<Racket[]>([]);
   const [filteredRackets, setFilteredRackets] = useState<Racket[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -46,6 +46,25 @@ export default function RacketsPage() {
   useEffect(() => {
     fetchRackets();
   }, []);
+
+  useEffect(() => {
+  if (!user) return;
+
+  const fetchFavorites = async () => {
+    try {
+      const res = await fetch(`/api/rackets/fav?userId=${user.id}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      // Assuming the API returns an array of racket IDs or objects with racket_id
+      const favoriteIds = data.map((fav: { racket_id: string }) => fav.racket_id);  
+      setClickedRackets(new Set(favoriteIds));
+    } catch (err) {
+      console.error("Failed to load favorites:", err);
+    }
+  };
+
+  fetchFavorites();
+}, [user]); // Re-runs when user logs in
 
   useEffect(() => {
     let filtered = rackets;
@@ -112,14 +131,14 @@ export default function RacketsPage() {
     setSearchQuery("");
   };
 
-  const handleFavorite = async (racketId: string) => {
-    const newFavorites = new Set(clickedRackets);
-    const isFavorited = newFavorites.has(racketId);
+  const handleFavorite = async (racketId: string) => {  // This function is called when a user clicks the favorite button on a racket card. It first checks if the user is logged in, and if not, it shows an alert asking them to sign in. Then it creates a new Set based on the current clickedRackets state to avoid mutating state directly. It check if the clicked racket is already favorited by checking if its ID is in the Set. Depending on whether the racket is currently favorited or not, it sends a POST or DELETE request to the server to update the user's favorites in the database. After the server responds, it updates the local state by either adding or removing the racket ID from the Set and then updating the clic
+    const newFavorites = new Set(clickedRackets); // Create a new Set to avoid mutating state directly
+    const isFavorited = newFavorites.has(racketId); // Check if the racket is currently favorited
   
-  // Send to database
+  // What does this do? it sends a request to the server(either POST or DELETE depending on whether the racket is currently favorited) to update the user's favorites in the database. The request includes the racket ID and a placeholder user ID("current_user_id"). After the server responds, it updates the local state to reflect the change in favorites by either adding or removing the racket ID from the clickedRackets set.
   await fetch("/api/rackets/fav", {
-    method: isFavorited ? "DELETE" : "POST",
-    body: JSON.stringify({ racketId, userId: "current_user_id" }), // Replace with actual user ID
+    method: isFavorited ? "DELETE" : "POST",  //
+    body: JSON.stringify({ racketId, userId: "current_user_id" }),
     headers: { "Content-Type": "application/json" },
   });
   
@@ -136,11 +155,6 @@ export default function RacketsPage() {
     return capitalizedWords.slice(0, wordCount).join(" ");
   };
 
-  // const thClass = "px-6 py-4 text-left text-sm font-semibold text-white";
-
-
-  // console.log("Current rackets:", currentRackets);
-  // console.log("First racket img_url:", currentRackets[0]?.img_url);
 
   return (
     <>
@@ -235,7 +249,6 @@ export default function RacketsPage() {
       {currentRackets.map((racket) => (
       <div key={racket.racket_id} className="relative">
 
-      {/* Favorite Button */}
       <button
       onClick={async () => {
       if (!user) {
@@ -273,10 +286,10 @@ export default function RacketsPage() {
       >
       <svg
       className="w-6 h-6"
-      fill={clickedRackets.has(racket.racket_id) ? "#FBBF24" : "#D1D5DB"}
+      fill={clickedRackets.has(racket.racket_id) ? "#e71010ff" : "#D1D5DB"}
       viewBox="0 0 20 20"
       >
-      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 9.5c06.78-3.4 6.86-8.55 11.54L12 21.35z" />
       </svg>
       </button>
 

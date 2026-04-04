@@ -13,17 +13,17 @@ const roboto = Roboto({
 
 export default function Home() {
   return (
-    <main className="relative min-h-screen">
+    <main className="min-h-screen">
       {/* Background gradient */}
       <div className="fixed inset-0 bg-gradient-to-b from-blue-400 via-blue-300 to-blue-200 -z-10"/>
-
-      <div className="relative z-10">
+      {/* Overlay for better text visibility */}
+      <div className="">
         {/* Hero section */}
-        <div className="my-24">
+        <div className="relative py-12">
           <h1
             className={`text-center ${outfit.className} font-extrabold text-7xl text-white`}
           >
-            Personalized Racket <br /> Recommendations, Made Simple
+            Personalized Racket Recommendations, Made Simple
           </h1>
           <h2
             className={`text-center my-8 ${roboto.className} text-2xl text-white`}
