@@ -1,6 +1,6 @@
 "use client";
 import { useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from "@/lib/supabase/client";
 import { Outfit} from 'next/font/google';
 
 const outfit = Outfit({
@@ -21,10 +21,7 @@ interface Answer{
   age_range?: string;
 }
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-);
+const supabase = createClient();
 
 //Answers for questions 1-5*
 const Answers_q1 = ['Beginner', 'Intermediate', 'Advanced']
@@ -67,23 +64,26 @@ export default function Questionnaire() {
 
   return (
     <div >
-      <div className="mx-auto rounded-3xl p-10 shadow-xl bg-white/12 max-w-2xl">
-        <h1 className={`${outfit.className} text-white  text-5xl font-bold mb-10 text-center `}>
+      {/* gradient */}
+      <div className="fixed inset-0 bg-gradient-to-b from-blue-400 via-blue-300 to-blue-200 -z-10" />
+
+      <div className="mx-auto rounded-3xl p-10 shadow-xl bg-white/70 max-w-2xl">
+        <h1 className={`${outfit.className} text-black  text-5xl font-bold mb-10 text-center `}>
         Player Assessment
       </h1>
 
 
       {/* Question 1*/}
-      <p className={"text-white  font-bold p-3 shadow-md text-lg mb-3"}>
+      <p className={"text-black  font-bold p-3 shadow-md text-lg mb-3"}>
         What is your experience level?
         </p>
       <div className="flex gap-5 mb-8 ">
         {Answers_q1.map((ans) => (
           <button 
-          className = {`max-w-2xl w-full bg-[#FFC038] hover:opacity-70 text-white transition-all py-4 rounded-[16px] font-bold text-lg ${
+          className = {`max-w-2xl w-full bg-[#FFC038] hover:opacity-70 text-black transition-all py-4 rounded-[16px] font-bold text-lg ${
             answer.experience === ans
-            ? 'bg-[#FFC038] text-white'
-            : 'bg-white/20 text-white'
+            ? 'bg-[#FFC038] text-black'
+            : 'bg-white/20 text-black'
 
           }`}
           key = {ans} onClick = {() => setAnswer({...answer, experience: ans})}>
@@ -94,16 +94,16 @@ export default function Questionnaire() {
       </div>
 
       {/* Question 2*/}
-      <p className={"text-white  font-bold p-3 shadow-md text-lg mb-3"}>
+      <p className={"text-black font-bold p-3 shadow-md text-lg mb-3"}>
         Do you have a preferred brand?
         </p>
       <div className="flex gap-5 mb-8 ">
         {Answers_q2.map((ans) => (
           <button 
-          className = {`max-w-2xl w-full bg-[#FFC038] hover:opacity-70 text-white transition-all py-4 rounded-[16px] font-bold text-lg ${
+          className = {`max-w-2xl w-full bg-[#FFC038] hover:opacity-70 text-black transition-all py-4 rounded-[16px] font-bold text-lg ${
             answer.brand === ans
-            ? 'bg-[#FFC038] text-white'
-            : 'bg-white/20 text-white'
+            ? 'bg-[#FFC038] text-black'
+            : 'bg-white/20 text-black'
 
           }`}
           key = {ans} onClick = {() => setAnswer({...answer, brand: ans})}>
@@ -114,16 +114,16 @@ export default function Questionnaire() {
       </div>
 
       {/* Question 3*/}
-      <p className={"text-white  font-bold p-3 shadow-md text-lg mb-3"}>
+      <p className={"text-black  font-bold p-3 shadow-md text-lg mb-3"}>
         What is your budget for a racket?
         </p>
       <div className="flex gap-5 mb-8 ">
         {Answers_q3.map((ans) => (
           <button 
-          className = {`max-w-2xl w-full bg-[#FFC038] hover:opacity-70 text-white transition-all py-4 rounded-[16px] font-bold text-lg ${
+          className = {`max-w-2xl w-full bg-[#FFC038] hover:opacity-70 text-black transition-all py-4 rounded-[16px] font-bold text-lg ${
             answer.racket_budget === ans
-            ? 'bg-[#FFC038] text-white'
-            : 'bg-white/20 text-white'
+            ? 'bg-[#FFC038] text-black'
+            : 'bg-white/20 text-black'
 
           }`}
           key = {ans} onClick = {() => setAnswer({...answer, racket_budget: ans})}>
@@ -134,16 +134,16 @@ export default function Questionnaire() {
       </div>
 
       {/* Question 4*/}
-      <p className={"text-white  font-bold p-3 shadow-md text-lg mb-3"}>
+      <p className={"text-black  font-bold p-3 shadow-md text-lg mb-3"}>
         What is your budget for a string?
         </p>
       <div className="flex gap-5 mb-8 ">
         {Answers_q4.map((ans) => (
           <button 
-          className = {`max-w-2xl w-full bg-[#FFC038] hover:opacity-70 text-white transition-all py-4 rounded-[16px] font-bold text-lg ${
+          className = {`max-w-2xl w-full bg-[#FFC038] hover:opacity-70 text-black transition-all py-4 rounded-[16px] font-bold text-lg ${
             answer.string_budget === ans
-            ? 'bg-[#FFC038] text-white'
-            : 'bg-white/20 text-white'
+            ? 'bg-[#FFC038] text-black'
+            : 'bg-white/20 text-black'
 
           }`}
           key = {ans} onClick = {() => setAnswer({...answer, string_budget: ans})}>
@@ -155,16 +155,16 @@ export default function Questionnaire() {
 
 
       {/* Question 5*/}
-      <p className={"text-white  font-bold p-3 shadow-md text-lg mb-3"}>
+      <p className={"text-black  font-bold p-3 shadow-md text-lg mb-3"}>
         Do you have any injuries in the following areas?
         </p>
       <div className="flex gap-5 mb-8 ">
         {Answers_q5.map((ans) => (
           <button 
-          className = {`max-w-2xl w-full bg-[#FFC038] hover:opacity-70 text-white transition-all py-4 rounded-[16px] font-bold text-lg ${
+          className = {`max-w-2xl w-full bg-[#FFC038] hover:opacity-70 text-black transition-all py-4 rounded-[16px] font-bold text-lg ${
             answer.injury === ans
-            ? 'bg-[#FFC038] text-white'
-            : 'bg-white/20 text-white'
+            ? 'bg-[#FFC038] text-black'
+            : 'bg-white/20 text-black'
 
           }`}
           key = {ans} onClick = {() => setAnswer({...answer, injury: ans})}>
@@ -176,16 +176,16 @@ export default function Questionnaire() {
 
 
       {/* Question 6*/}
-      <p className={"text-white  font-bold p-3 shadow-md text-lg mb-3"}>
+      <p className={"text-black  font-bold p-3 shadow-md text-lg mb-3"}>
         What version of badminton do you typically play?
         </p>
       <div className="flex gap-5 mb-8 ">
         {Answers_q6.map((ans) => (
           <button 
-          className = {`max-w-2xl w-full bg-[#FFC038] hover:opacity-70 text-white transition-all py-4 rounded-[16px] font-bold text-lg ${
+          className = {`max-w-2xl w-full bg-[#FFC038] hover:opacity-70 text-black transition-all py-4 rounded-[16px] font-bold text-lg ${
             answer.game_type === ans
-            ? 'bg-[#FFC038] text-white'
-            : 'bg-white/20 text-white'
+            ? 'bg-[#FFC038] text-black'
+            : 'bg-white/20 text-black'
 
           }`}
           key = {ans} onClick = {() => setAnswer({...answer, game_type: ans})}>
@@ -196,16 +196,16 @@ export default function Questionnaire() {
       </div>
 
       {/* Question 7*/}
-      <p className={"text-white  font-bold p-3 shadow-md text-lg mb-3"}>
+      <p className={"text-black  font-bold p-3 shadow-md text-lg mb-3"}>
         Do you want a racket that comes strung?
         </p>
       <div className="flex gap-5 mb-8 ">
         {Answers_q7.map((ans) => (
           <button 
-          className = {`max-w-2xl w-full bg-[#FFC038] hover:opacity-70 text-white transition-all py-4 rounded-[16px] font-bold text-lg ${
+          className = {`max-w-2xl w-full bg-[#FFC038] hover:opacity-70 text-black transition-all py-4 rounded-[16px] font-bold text-lg ${
             answer.strung === ans
-            ? 'bg-[#FFC038] text-white'
-            : 'bg-white/20 text-white'
+            ? 'bg-[#FFC038] text-black'
+            : 'bg-white/20 text-black'
 
           }`}
           key = {ans} onClick = {() => setAnswer({...answer, strung: ans})}>
@@ -217,16 +217,16 @@ export default function Questionnaire() {
 
 
       {/* Question 8*/}
-      <p className={"text-white  font-bold p-3 shadow-md text-lg mb-3"}>
+      <p className={"text-black  font-bold p-3 shadow-md text-lg mb-3"}>
         What is your age range?
         </p>
       <div className="flex gap-5 mb-8 ">
         {Answers_q8.map((ans) => (
           <button 
-          className = {`max-w-2xl w-full bg-[#FFC038] hover:opacity-70 text-white transition-all py-4 rounded-[16px] font-bold text-lg ${
+          className = {`max-w-2xl w-full bg-[#FFC038] hover:opacity-70 text-black transition-all py-4 rounded-[16px] font-bold text-lg ${
             answer.age_range === ans
-            ? 'bg-[#FFC038] text-white'
-            : 'bg-white/20 text-white'
+            ? 'bg-[#FFC038] text-black'
+            : 'bg-white/20 text-black'
 
           }`}
           key = {ans} onClick = {() => setAnswer({...answer, age_range: ans})}>
@@ -237,16 +237,16 @@ export default function Questionnaire() {
       </div>
 
       {/* Question 9*/}
-      <p className={"text-white  font-bold p-3 shadow-md text-lg mb-3"}>
+      <p className={"text-black  font-bold p-3 shadow-md text-lg mb-3"}>
         How would you describe your play-style?
         </p>
       <div className="flex gap-5 mb-8 ">
         {Answers_q9.map((ans) => (
           <button 
-          className = {`max-w-2xl w-full bg-[#FFC038] hover:opacity-70 text-white transition-all py-4 rounded-[16px] font-bold text-lg ${
+          className = {`max-w-2xl w-full bg-[#FFC038] hover:opacity-70 text-black transition-all py-4 rounded-[16px] font-bold text-lg ${
             answer.play_style === ans
-            ? 'bg-[#FFC038] text-white'
-            : 'bg-white/20 text-white'
+            ? 'bg-[#FFC038] text-black'
+            : 'bg-white/20 text-black'
 
           }`}
           key = {ans} onClick = {() => setAnswer({...answer, play_style: ans})}>
@@ -257,16 +257,16 @@ export default function Questionnaire() {
       </div>
 
       {/* Question 10*/}
-      <p className={"text-white  font-bold p-3 shadow-md text-lg mb-3"}>
+      <p className={"text-black  font-bold p-3 shadow-md text-lg mb-3"}>
         Have you played any of the following sports?
         </p>
       <div className="flex gap-5 mb-8 ">
         {Answers_q10.map((ans) => (
           <button 
-          className = {`max-w-2xl w-full bg-[#FFC038] hover:opacity-70 text-white transition-all py-4 rounded-[16px] font-bold text-lg ${
+          className = {`max-w-2xl w-full bg-[#FFC038] hover:opacity-70 text-black transition-all py-4 rounded-[16px] font-bold text-lg ${
             answer.sport_background === ans
-            ? 'bg-[#FFC038] text-white'
-            : 'bg-white/20 text-white'
+            ? 'bg-[#FFC038] text-black'
+            : 'bg-white/20 text-black'
 
           }`}
           key = {ans} onClick = {() => setAnswer({...answer, sport_background: ans})}>
@@ -278,7 +278,7 @@ export default function Questionnaire() {
             {/* Submit button */}
       <button
        onClick={dataSubmit}
-       className={"transition-all font-bold w-full bg-[#FFC038] py-4 text-white rounded-full text-lg hover:opacity-70"}
+       className={"transition-all font-bold w-full bg-[#FFC038] py-4 text-black rounded-full text-lg hover:opacity-70"}
 
        >Submit</button>
 
