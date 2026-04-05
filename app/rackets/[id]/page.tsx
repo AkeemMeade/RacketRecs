@@ -19,6 +19,45 @@ export default function RacketDetails({ params }: { params: Promise<{ id: string
   const [racket, setRacket] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+  async function getUser() {
+    const { data: { user } } = await supabase.auth.getUser();
+    setUserId(user?.id ?? null);
+  }
+  getUser();
+}, []);
+
+useEffect(() => {
+  if (!userId || !id) return;
+  async function checkFavorite() {
+    const { data } = await supabase
+      .from("favorites")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("racket_id", id)
+      .single();
+    setIsFavorited(!!data);
+  }
+  checkFavorite();
+}, [userId, id]);
+
+const handleFavorite = async () => {
+  if (!userId) return;
+  if (isFavorited) {
+    await supabase.from("favorites").delete()
+      .eq("user_id", userId)
+      .eq("racket_id", id);
+  } else {
+    await supabase.from("favorites").insert({
+      user_id: userId,
+      racket_id: id,
+    });
+  }
+  setIsFavorited(!isFavorited);
+};
+
   useEffect(() => {
     async function fetchRacket() {
       const { data } = await supabase
@@ -89,7 +128,8 @@ export default function RacketDetails({ params }: { params: Promise<{ id: string
                 Racket
               </span>
               <button
-                onClick={() => setIsFavorited(!isFavorited)}
+                onClick={handleFavorite}
+                disabled={!userId}
                 className="w-9 h-9 rounded-full border-2 border-[#FFC038] flex items-center justify-center transition-all hover:bg-[#FFC038] group"
               >
                 {isFavorited ? (

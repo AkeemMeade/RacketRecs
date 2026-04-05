@@ -37,7 +37,7 @@ function SectionCard({
 
 interface Favorite {
   racket_id: string;
-  rackets: {
+  racket: {
     name: string;
     img_url: string;
   };
@@ -129,12 +129,12 @@ export default function ProfilePage() {
                       className="flex items-center gap-3 rounded-xl bg-slate-50 px-4 py-3 ring-1 ring-slate-100 hover:ring-blue-400 hover:bg-blue-50 transition"
                     >
                       <img
-                        src={fav.rackets?.img_url || "/placeholder-racket.png"}
-                        alt={fav.rackets?.name}
+                        src={fav.racket?.img_url || "/placeholder-racket.png"}
+                        alt={fav.racket?.name}
                         className="h-12 w-12 object-contain shrink-0"
                       />
                       <span className="text-sm font-semibold text-slate-800">
-                        {truncate(fav.rackets?.name || "", 3)}
+                        {truncate(fav.racket?.name || "", 3)}
                       </span>
                     </Link>
                   ))}
