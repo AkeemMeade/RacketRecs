@@ -90,7 +90,6 @@ export default function ProfilePage() {
             data are connected.
           </p>
         </div>
-
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* Left Column */}
           <div className="lg:col-span-1 space-y-6">

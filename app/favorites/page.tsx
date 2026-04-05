@@ -17,6 +17,26 @@ const truncate = (name: string, wordCount = 3): string =>
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(" ");
 
+function SectionCard({
+  title,
+  subtitle,
+  children,
+}: {
+  title: string;
+  subtitle?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-2xl bg-white/85 shadow-xl ring-1 ring-white/40 backdrop-blur-md">
+      <div className="border-b border-slate-100 px-6 py-5">
+        <h2 className="text-lg font-extrabold text-slate-900">{title}</h2>
+        {subtitle && <p className="mt-1 text-sm text-slate-600">{subtitle}</p>}
+      </div>
+      <div className="px-6 py-5">{children}</div>
+    </div>
+  );
+}
+
 export default function FavoritesPage() {
   const { user } = useUser();
   const [favorites, setFavorites] = useState<Favorite[]>([]);
@@ -46,34 +66,43 @@ export default function FavoritesPage() {
           Your Favorites
         </h1>
 
-        {loading ? (
-          <div className="flex justify-center py-20">
-            <div className="w-8 h-8 border-2 border-blue-300 border-t-white rounded-full animate-spin" />
-          </div>
-        ) : !user ? (
-          <p className="text-white/80">Sign in to see your favorites.</p>
-        ) : favorites.length === 0 ? (
-          <p className="text-white/80">No favorites yet.</p>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {favorites.map((fav) => (
-              <Link
-                key={fav.racket_id}
-                href={`/rackets/${fav.racket_id}`}
-                className="bg-white/85 backdrop-blur-md rounded-2xl p-4 flex flex-col items-center gap-3 hover:ring-2 hover:ring-blue-400 transition"
-              >
-                <img
-                  src={fav.racket?.img_url || "/placeholder-racket.png"}
-                  alt={fav.racket?.name}
-                  className="h-36 w-36 object-contain"
-                />
-                <span className="text-sm font-semibold text-slate-800 text-center">
-                  {truncate(fav.racket?.name || "", 3)}
-                </span>
-              </Link>
-            ))}
-          </div>
-        )}
+        <SectionCard
+          title="Favorites"
+          subtitle={`${favorites.length} saved racket${favorites.length !== 1 ? "s" : ""}`}
+        >
+          {loading ? (
+            <div className="flex justify-center py-6">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+            </div>
+          ) : !user ? (
+            <div className="rounded-xl bg-slate-50 px-4 py-6 text-center ring-1 ring-slate-100">
+              <p className="text-sm text-slate-500">Sign in to see favorites.</p>
+            </div>
+          ) : favorites.length === 0 ? (
+            <div className="rounded-xl bg-slate-50 px-4 py-6 text-center ring-1 ring-slate-100">
+              <p className="text-sm text-slate-500">No favorites yet.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {favorites.map((fav) => (
+                <Link
+                  key={fav.racket_id}
+                  href={`/rackets/${fav.racket_id}`}
+                  className="flex items-center gap-3 rounded-xl bg-slate-50 px-4 py-3 ring-1 ring-slate-100 hover:ring-blue-400 hover:bg-blue-50 transition"
+                >
+                  <img
+                    src={fav.racket?.img_url || "/placeholder-racket.png"}
+                    alt={fav.racket?.name}
+                    className="h-12 w-12 object-contain shrink-0"
+                  />
+                  <span className="text-sm font-semibold text-slate-800">
+                    {truncate(fav.racket?.name || "", 3)}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          )}
+        </SectionCard>
       </div>
     </main>
   );

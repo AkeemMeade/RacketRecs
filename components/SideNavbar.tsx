@@ -14,6 +14,8 @@ import { FaSearch } from "react-icons/fa";
 import { useUser } from "@/lib/UserContext";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { FaCodeCompare } from "react-icons/fa6";
+import { FaWrench } from "react-icons/fa";
 
 const Menus = [
   {
@@ -35,6 +37,12 @@ const Menus = [
   },
   // search
   { title: "Search", href: "/rackets", icon: <FaSearch size={22} /> },
+
+  // comparison tool
+  { title: "Comparison Tool", href: "/comparison", icon: <FaCodeCompare size={22} /> },
+
+  // maintenence tracker
+  { title: "Maintenence Tracker", href: "/maintenance tracker", icon: <FaWrench size={22} /> },
 ];
 
 const BottomMenus = [
@@ -117,10 +125,10 @@ export function SideNavbar() {
         </ul>
 
         {/* Separator Bottom */}
-        <div className="w-full h-[1px] bg-gray-300 mt-100" />
+        <div className="w-full h-[1px] bg-gray-300 mt-10" />
 
         {/* Bottom section */}
-        <ul className="mb-4 mt-4">
+        <ul className="mb-4">
           {BottomMenus.map((menu, index) => renderMenus(menu, index))}
         </ul>
       </div>
