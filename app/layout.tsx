@@ -4,6 +4,8 @@ import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { NavbarProvider } from "@/components/ui/navbar-context";
 import { SideNavbar } from "@/components/SideNavbar";
+import { UserProvider } from "@/lib/UserContext";
+import { ChatWidget } from "@/components/ChatWidget";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,11 +33,14 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <NavbarProvider>
+          <UserProvider>
           <SideNavbar />
           <Navbar />
           <main className="pt-16">
             {children}
           </main>
+          </UserProvider>
+          <ChatWidget />
         </NavbarProvider>
       </body>
     </html>

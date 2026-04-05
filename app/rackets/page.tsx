@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import TuneIcon from '@mui/icons-material/Tune';
+import Checkbox from "@mui/material/Checkbox";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -17,7 +18,7 @@ interface Racket {
   name: string;
   balance: string;
   weight: string;
-  manufacturer_id: string;
+  manufacturer_id: number;
   img_url?: string;
 }
 
@@ -55,7 +56,7 @@ export default function RacketsPage() {
           racket.name?.toLowerCase().includes(query) ||
           racket.balance?.toLowerCase().includes(query) ||
           racket.weight?.toLowerCase().includes(query) ||
-          racket.manufacturer_id?.toLowerCase().includes(query),
+          racket.manufacturer_id?.toString().toLowerCase().includes(query),
       );
     }
 
@@ -68,7 +69,7 @@ export default function RacketsPage() {
 
     if (selectedManufacturers.length > 0) {
       filtered = filtered.filter((racket) =>
-        selectedManufacturers.includes(racket.manufacturer_id),
+        selectedManufacturers.includes(racket.manufacturer_id?.toString().toLowerCase()),
       );
     }
 
@@ -117,19 +118,13 @@ export default function RacketsPage() {
     return capitalizedWords.slice(0, wordCount).join(" ");
   };
 
-  // const thClass = "px-6 py-4 text-left text-sm font-semibold text-white";
-
-
-  // console.log("Current rackets:", currentRackets);
-  // console.log("First racket img_url:", currentRackets[0]?.img_url);
-
   return (
     <>
       {/* gradient */}
       <div className="fixed inset-0 bg-gradient-to-b from-blue-400 via-blue-300 to-blue-200 -z-10" />
 
       {/* Main Content */}
-      <div className="mt-10 max-w-[1650px] mx-auto px-4 py-12">
+      <div className="-mt-5 max-w-[1250px] mx-auto px-4 py-12">
         <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-12">
           <div className="flex justify-between items-center mb-10">
             <h2
@@ -138,6 +133,7 @@ export default function RacketsPage() {
               Browse Rackets
             </h2>
 
+            <div className="relative">
             <button
               onClick={() => setShowFilters(!showFilters)}
               className={` 
@@ -150,6 +146,75 @@ export default function RacketsPage() {
             >
               <TuneIcon className="h-5 w-5" />
             </button>
+
+        
+            {showFilters && (
+              <div className={`absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg p-4 z-20`}  >
+                <h3 className={`font-bold text-black ${outfit.className}`}>Balance</h3>
+
+                <div className="flex">
+                {["Head Heavy", "Head Light", "Even"].map((balance) => (
+                  <label key={balance}>
+                    <Checkbox
+                      checked={selectedBalances.includes(balance)}
+                      onChange={() => {
+                        if (selectedBalances.includes(balance)) {
+                          setSelectedBalances(selectedBalances.filter(b => b !== balance));
+                        } else {
+                          setSelectedBalances([...selectedBalances, balance]);
+                        }
+                      }}
+                    />
+                    {balance}
+                  </label>
+                ))}
+                </div>
+
+                <h3 className={`font-bold text-black ${outfit.className}`}>Manufacturer</h3>
+
+                <div className="flex">
+                {["Yonex", "Wilson", "Babolat", "Head"].map((manufacturer) => (
+                  <label key={manufacturer}>
+                    <Checkbox
+                      checked={selectedManufacturers.includes(manufacturer)}
+                      onChange={() => {
+                        if (selectedManufacturers.includes(manufacturer)) {
+                          setSelectedManufacturers(selectedManufacturers.filter(m => m !== manufacturer));
+                        } else {
+                          setSelectedManufacturers([...selectedManufacturers, manufacturer]);
+                        }
+                      }}
+                    />
+                    {manufacturer}
+                  </label>
+                ))}
+                </div>
+
+                <h3 className={`font-bold text-black ${outfit.className}`}>Weight</h3>
+
+                <div className="flex">
+                {["Yonex", "Wilson", "Babolat", "Head"].map((weight) => (
+                  <label key={weight}>
+                    <Checkbox
+                      checked={selectedWeightRanges.includes(weight)}
+                      onChange={() => {
+                        if (selectedWeightRanges.includes(weight)) {
+                          setSelectedWeightRanges(selectedWeightRanges.filter(w => w !== weight));
+                        } else {
+                          setSelectedWeightRanges([...selectedWeightRanges, weight]);
+                        }
+                      }}
+                    />
+                    {weight}
+                  </label>
+                ))}
+                </div>
+
+
+              </div>
+              
+            )}
+            </div>
           </div>
 
           {/* Search bar */}
@@ -229,7 +294,7 @@ export default function RacketsPage() {
                         className="w-full h-48 object-contain mb-4 group-hover:scale-105 transition-transform duration-300"
                       />
                       <h3 className="text-center font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
-                        {truncate(racket.name || "", 3)}
+                        {racket.name}
                       </h3>
                     </div>
                   </Link>
@@ -243,11 +308,10 @@ export default function RacketsPage() {
                     setCurrentPage((prev) => Math.max(prev - 1, 1))
                   }
                   disabled={currentPage === 1}
-                  className={`px-4 py-2 rounded-full ${
-                    currentPage === 1
+                  className={`px-4 py-2 rounded-full ${currentPage === 1
                       ? "bg-gray-300 cursor-not-allowed"
                       : "bg-[#FFC038] text-black hover:bg-[#FFB800] hover:cursor-pointer"
-                  }`}
+                    }`}
                 >
                   Previous
                 </button>
@@ -261,11 +325,10 @@ export default function RacketsPage() {
                     setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                   }
                   disabled={currentPage === totalPages}
-                  className={`px-4 py-2 rounded-full ${
-                    currentPage === totalPages
+                  className={`px-4 py-2 rounded-full ${currentPage === totalPages
                       ? "bg-gray-300 cursor-not-allowed"
                       : "bg-[#FFC038] text-black hover:bg-[#FFB800] hover:cursor-pointer"
-                  }`}
+                    }`}
                 >
                   Next
                 </button>

@@ -27,12 +27,13 @@ const roboto = Roboto({
   weight: ["300", "400", "500", "700"],
 });
 
+const supabase = createClient();
+
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [isError, setIsError] = useState(false);
-  const supabase = createClient();
 
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();

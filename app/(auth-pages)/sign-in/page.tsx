@@ -28,13 +28,14 @@ const roboto = Roboto({
   weight: ["300", "400", "500", "700"],
 });
 
+const supabase = createClient();
+
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
-  const supabase = createClient();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
