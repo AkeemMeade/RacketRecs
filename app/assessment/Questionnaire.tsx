@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { createClient } from "@/lib/supabase/client";
 import { Outfit} from 'next/font/google';
+import {useRouter} from 'next/navigation';
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -10,36 +11,38 @@ const outfit = Outfit({
 
 interface Answer{
   experience?: string;
-  brand?: string;
-  racket_budget?: string;
-  string_budget?: string;
+  event?: string;
+  playstyle?: string;
+  playloc?: string;
+  movement?: string;
+  strength?: string;
   injury?: string;
-  game_type?: string;
-  strung?: string;
-  play_style?: string;
-  sport_background?: string;
-  age_range?: string;
+  feel?: string;
+  budget?: string;
+  brand?: string;
 }
+
 
 const supabase = createClient();
 
-//Answers for questions 1-5*
+//Answers for questions 1-10
 const Answers_q1 = ['Beginner', 'Intermediate', 'Advanced']
-const Answers_q2 = ['Yonex', 'Victor', 'Li-Ning', 'None']
-const Answers_q3 = ['$10 - $49.99', '$50 - $129.99', '$130 - $249.99', '$250+']
-const Answers_q4 = ['$3 - $8.99', '$9 - $15.99', '$16 - $24.99', '$25+']
-const Answers_q5 = ['Wrist', 'Elbow/Shoulder', 'Both', 'Neither']
-const Answers_q6 = ['Singles', 'Doubles', 'Both']
-const Answers_q7 = ['Yes', 'No']
-const Answers_q8 = ['5-10', '11-15', '16+']
-const Answers_q9 = ['Aggressive', 'Defensive', 'Balanced']
-const Answers_q10 = ['Baseball', 'Tennis', 'Squash', 'None']
+const Answers_q2 = ['Singles', 'Doubles', 'Mixed', 'All']
+const Answers_q3 = ['Agressive(Attacking / Smashing)', 'Defensive(Control & Placement)', 'Balanced', 'Not sure']
+const Answers_q4 = ['Front / Net', 'Backcourt', 'Both']
+const Answers_q5 = ['Fast / Explosive', 'Slower / Prefer easier swings']
+const Answers_q6 = ['Strong (I can generate power easily)', 'Average', 'Weak (I struggle to generate power / hit to backcourt)']
+const Answers_q7 = ['Wrist pain', 'Shoulder pain', 'Both', 'None']
+const Answers_q8 = ['Stiff / precise', 'Flexible / easier power generation', 'Not sure']
+const Answers_q9 = ['Under $50', '$50 - $100', '$100 - $200', '$200+', 'No preference']
+const Answers_q10 = ['Yonex', 'Victor', 'Li-Ning', 'Hundred', 'Other', 'None']
 
 
 export default function Questionnaire() {
   
   const [answer, setAnswer] = useState<Answer>({});
   const [isComplete, setIsComplete] = useState(false);
+  const router = useRouter();
 
   //Submits responses to supabase
   const dataSubmit = async () =>{
@@ -47,19 +50,7 @@ export default function Questionnaire() {
     .from('assessment_response')
     .insert([answer]);
     setIsComplete(true);
-  }
-
-
-  //Page redirect for when assessment response is submitted
-  if(isComplete){
-    return(
-      <div>
-        <h1 className = "text-center text-xl mt-30" >
-          Placeholder for recommendation engine:
-          Generating recommendation... 
-          </h1>
-      </div>
-    )
+    router.push('/recommendation');
   }
 
   return (
@@ -95,18 +86,18 @@ export default function Questionnaire() {
 
       {/* Question 2*/}
       <p className={"text-black font-bold p-3 shadow-md text-lg mb-3"}>
-        Do you have a preferred brand?
+        What event do you play?
         </p>
       <div className="flex gap-5 mb-8 ">
         {Answers_q2.map((ans) => (
           <button 
           className = {`max-w-2xl w-full bg-[#FFC038] hover:opacity-70 text-black transition-all py-4 rounded-[16px] font-bold text-lg ${
-            answer.brand === ans
+            answer.event === ans
             ? 'bg-[#FFC038] text-black'
             : 'bg-white/20 text-black'
 
           }`}
-          key = {ans} onClick = {() => setAnswer({...answer, brand: ans})}>
+          key = {ans} onClick = {() => setAnswer({...answer, event: ans})}>
             {ans}
             </button>
         ))}
@@ -115,18 +106,18 @@ export default function Questionnaire() {
 
       {/* Question 3*/}
       <p className={"text-black  font-bold p-3 shadow-md text-lg mb-3"}>
-        What is your budget for a racket?
+        What is your preferred playstyle?
         </p>
       <div className="flex gap-5 mb-8 ">
         {Answers_q3.map((ans) => (
           <button 
           className = {`max-w-2xl w-full bg-[#FFC038] hover:opacity-70 text-black transition-all py-4 rounded-[16px] font-bold text-lg ${
-            answer.racket_budget === ans
+            answer.playstyle === ans
             ? 'bg-[#FFC038] text-black'
             : 'bg-white/20 text-black'
 
           }`}
-          key = {ans} onClick = {() => setAnswer({...answer, racket_budget: ans})}>
+          key = {ans} onClick = {() => setAnswer({...answer, playstyle: ans})}>
             {ans}
             </button>
         ))}
@@ -135,18 +126,18 @@ export default function Questionnaire() {
 
       {/* Question 4*/}
       <p className={"text-black  font-bold p-3 shadow-md text-lg mb-3"}>
-        What is your budget for a string?
+        Where do you usually play on court?
         </p>
       <div className="flex gap-5 mb-8 ">
         {Answers_q4.map((ans) => (
           <button 
           className = {`max-w-2xl w-full bg-[#FFC038] hover:opacity-70 text-black transition-all py-4 rounded-[16px] font-bold text-lg ${
-            answer.string_budget === ans
+            answer.playloc === ans
             ? 'bg-[#FFC038] text-black'
             : 'bg-white/20 text-black'
 
           }`}
-          key = {ans} onClick = {() => setAnswer({...answer, string_budget: ans})}>
+          key = {ans} onClick = {() => setAnswer({...answer, playloc: ans})}>
             {ans}
             </button>
         ))}
@@ -156,10 +147,51 @@ export default function Questionnaire() {
 
       {/* Question 5*/}
       <p className={"text-black  font-bold p-3 shadow-md text-lg mb-3"}>
-        Do you have any injuries in the following areas?
+        How would you describe your movement speed?
         </p>
       <div className="flex gap-5 mb-8 ">
         {Answers_q5.map((ans) => (
+          <button 
+          className = {`max-w-2xl w-full bg-[#FFC038] hover:opacity-70 text-black transition-all py-4 rounded-[16px] font-bold text-lg ${
+            answer.movement === ans
+            ? 'bg-[#FFC038] text-black'
+            : 'bg-white/20 text-black'
+
+          }`}
+          key = {ans} onClick = {() => setAnswer({...answer, movement: ans})}>
+            {ans}
+            </button>
+        ))}
+
+      </div>
+
+
+      {/* Question 6*/}
+      <p className={"text-black  font-bold p-3 shadow-md text-lg mb-3"}>
+        How strong is your swing?
+        </p>
+      <div className="flex gap-5 mb-8 ">
+        {Answers_q6.map((ans) => (
+          <button 
+          className = {`max-w-2xl w-full bg-[#FFC038] hover:opacity-70 text-black transition-all py-4 rounded-[16px] font-bold text-lg ${
+            answer.strength === ans
+            ? 'bg-[#FFC038] text-black'
+            : 'bg-white/20 text-black'
+
+          }`}
+          key = {ans} onClick = {() => setAnswer({...answer, strength: ans})}>
+            {ans}
+            </button>
+        ))}
+
+      </div>
+
+      {/* Question 7*/}
+      <p className={"text-black  font-bold p-3 shadow-md text-lg mb-3"}>
+        Do you have any joint / muscle issues with any of the following?
+        </p>
+      <div className="flex gap-5 mb-8 ">
+        {Answers_q7.map((ans) => (
           <button 
           className = {`max-w-2xl w-full bg-[#FFC038] hover:opacity-70 text-black transition-all py-4 rounded-[16px] font-bold text-lg ${
             answer.injury === ans
@@ -175,61 +207,20 @@ export default function Questionnaire() {
       </div>
 
 
-      {/* Question 6*/}
-      <p className={"text-black  font-bold p-3 shadow-md text-lg mb-3"}>
-        What version of badminton do you typically play?
-        </p>
-      <div className="flex gap-5 mb-8 ">
-        {Answers_q6.map((ans) => (
-          <button 
-          className = {`max-w-2xl w-full bg-[#FFC038] hover:opacity-70 text-black transition-all py-4 rounded-[16px] font-bold text-lg ${
-            answer.game_type === ans
-            ? 'bg-[#FFC038] text-black'
-            : 'bg-white/20 text-black'
-
-          }`}
-          key = {ans} onClick = {() => setAnswer({...answer, game_type: ans})}>
-            {ans}
-            </button>
-        ))}
-
-      </div>
-
-      {/* Question 7*/}
-      <p className={"text-black  font-bold p-3 shadow-md text-lg mb-3"}>
-        Do you want a racket that comes strung?
-        </p>
-      <div className="flex gap-5 mb-8 ">
-        {Answers_q7.map((ans) => (
-          <button 
-          className = {`max-w-2xl w-full bg-[#FFC038] hover:opacity-70 text-black transition-all py-4 rounded-[16px] font-bold text-lg ${
-            answer.strung === ans
-            ? 'bg-[#FFC038] text-black'
-            : 'bg-white/20 text-black'
-
-          }`}
-          key = {ans} onClick = {() => setAnswer({...answer, strung: ans})}>
-            {ans}
-            </button>
-        ))}
-
-      </div>
-
-
       {/* Question 8*/}
       <p className={"text-black  font-bold p-3 shadow-md text-lg mb-3"}>
-        What is your age range?
+        What racket feel do you prefer?
         </p>
       <div className="flex gap-5 mb-8 ">
         {Answers_q8.map((ans) => (
           <button 
           className = {`max-w-2xl w-full bg-[#FFC038] hover:opacity-70 text-black transition-all py-4 rounded-[16px] font-bold text-lg ${
-            answer.age_range === ans
+            answer.feel === ans
             ? 'bg-[#FFC038] text-black'
             : 'bg-white/20 text-black'
 
           }`}
-          key = {ans} onClick = {() => setAnswer({...answer, age_range: ans})}>
+          key = {ans} onClick = {() => setAnswer({...answer, feel: ans})}>
             {ans}
             </button>
         ))}
@@ -238,18 +229,18 @@ export default function Questionnaire() {
 
       {/* Question 9*/}
       <p className={"text-black  font-bold p-3 shadow-md text-lg mb-3"}>
-        How would you describe your play-style?
+        What is your budget?
         </p>
       <div className="flex gap-5 mb-8 ">
         {Answers_q9.map((ans) => (
           <button 
           className = {`max-w-2xl w-full bg-[#FFC038] hover:opacity-70 text-black transition-all py-4 rounded-[16px] font-bold text-lg ${
-            answer.play_style === ans
+            answer.budget === ans
             ? 'bg-[#FFC038] text-black'
             : 'bg-white/20 text-black'
 
           }`}
-          key = {ans} onClick = {() => setAnswer({...answer, play_style: ans})}>
+          key = {ans} onClick = {() => setAnswer({...answer, budget: ans})}>
             {ans}
             </button>
         ))}
@@ -258,18 +249,18 @@ export default function Questionnaire() {
 
       {/* Question 10*/}
       <p className={"text-black  font-bold p-3 shadow-md text-lg mb-3"}>
-        Have you played any of the following sports?
+        Do you have any preferred brands?
         </p>
       <div className="flex gap-5 mb-8 ">
         {Answers_q10.map((ans) => (
           <button 
           className = {`max-w-2xl w-full bg-[#FFC038] hover:opacity-70 text-black transition-all py-4 rounded-[16px] font-bold text-lg ${
-            answer.sport_background === ans
+            answer.brand === ans
             ? 'bg-[#FFC038] text-black'
             : 'bg-white/20 text-black'
 
           }`}
-          key = {ans} onClick = {() => setAnswer({...answer, sport_background: ans})}>
+          key = {ans} onClick = {() => setAnswer({...answer, brand: ans})}>
             {ans}
             </button>
         ))}
