@@ -689,7 +689,7 @@ export default function MaintenanceTrackerPage() {
               className="mt-5 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200"
             />
 
-            <div className="mt-6 max-h-[560px] space-y-3 overflow-y-auto pr-2">
+            <div className="mt-6 max-h-[1100px] space-y-3 overflow-y-auto pr-2">
               {loadingRackets && (
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 shadow-sm">
                   Loading rackets...
@@ -766,10 +766,10 @@ export default function MaintenanceTrackerPage() {
               ) : (
                 <div className="mt-6 grid gap-4 md:grid-cols-2">
                   {trackedRackets.map((racket) => (
-                    <button
+                    <div
                       key={racket.trackedId}
                       onClick={() => setSelectedTrackedId(racket.trackedId)}
-                      className={`rounded-2xl border p-4 text-left shadow-sm transition ${
+                      className={`cursor-pointer rounded-2xl border p-4 text-left shadow-sm transition ${
                         selectedTrackedId === racket.trackedId
                           ? "border-amber-300 bg-amber-50"
                           : "border-slate-200 bg-slate-50 hover:border-slate-300"
@@ -780,12 +780,11 @@ export default function MaintenanceTrackerPage() {
                           <h3 className="text-lg font-semibold text-slate-800">
                             {formatRacketName(racket.name)}
                           </h3>
-                          <p className="mt-1 text-sm text-slate-600">
-                            {racket.brand}
-                          </p>
+                          <p className="mt-1 text-sm text-slate-600">{racket.brand}</p>
                         </div>
 
                         <button
+                          type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             removeTrackedRacket(racket.trackedId);
@@ -808,20 +807,16 @@ export default function MaintenanceTrackerPage() {
 
                       <div className="mt-4 space-y-1 text-sm text-slate-600">
                         <p>
-                          <span className="font-medium text-slate-700">
-                            Last restrung:
-                          </span>{" "}
+                          <span className="font-medium text-slate-700">Last restrung:</span>{" "}
                           {formatDisplayDate(racket.lastRestrung)}
                         </p>
                         <p>
-                          <span className="font-medium text-slate-700">
-                            Last grip change:
-                          </span>{" "}
+                          <span className="font-medium text-slate-700">Last grip change:</span>{" "}
                           {formatDisplayDate(racket.lastGripChange)}
                         </p>
                       </div>
-                    </button>
-                  ))}
+                    </div>
+                    ))}
                 </div>
               )}
             </div>
