@@ -16,7 +16,17 @@ interface Answer{
   playloc?: string;
   movement?: string;
   strength?: string;
+  event?: string;
+  playstyle?: string;
+  playloc?: string;
+  movement?: string;
+  strength?: string;
   injury?: string;
+  feel?: string;
+  budget?: string;
+  brand?: string;
+}
+
   feel?: string;
   budget?: string;
   brand?: string;

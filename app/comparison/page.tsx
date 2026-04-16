@@ -181,9 +181,7 @@ export default function ComparisonPage() {
   ];
 
   return (
-    <main className="-mt-15 min-h-screen ">
-      {/* Background gradient */}
-      <div className="fixed inset-0 bg-gradient-to-b from-blue-400 via-blue-300 to-blue-200 -z-10"/>
+    <main className="min-h-screen bg-gradient-to-b from-blue-400 via-blue-300 to-blue-200">
       <section className="mx-auto max-w-6xl px-6 py-10">
         <div className="mb-10">
           <h1 className="text-4xl font-bold tracking-tight text-white">

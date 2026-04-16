@@ -5,6 +5,7 @@ import { Outfit } from "next/font/google";
 import { useUser } from "@/lib/UserContext";
 import Link from "next/link";
 
+
 const outfit = Outfit({
   subsets: ["latin"],
   weight: ["300", "400", "500", "700"],

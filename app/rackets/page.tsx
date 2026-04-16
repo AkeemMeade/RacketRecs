@@ -3,9 +3,9 @@
 import { Outfit, Roboto } from "next/font/google";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import SearchIcon from '@mui/icons-material/Search';
-import ClearIcon from '@mui/icons-material/Clear';
-import TuneIcon from '@mui/icons-material/Tune';
+import SearchIcon from "@mui/icons-material/Search";
+import ClearIcon from "@mui/icons-material/Clear";
+import TuneIcon from "@mui/icons-material/Tune";
 import Checkbox from "@mui/material/Checkbox";
 import { GiShuttlecock } from "react-icons/gi";
 
@@ -33,8 +33,12 @@ export default function RacketsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedBalances, setSelectedBalances] = useState<string[]>([]);
-  const [selectedManufacturers, setSelectedManufacturers] = useState<string[]>([],);
-  const [selectedWeightRanges, setSelectedWeightRanges] = useState<string[]>([],);
+  const [selectedManufacturers, setSelectedManufacturers] = useState<string[]>(
+    [],
+  );
+  const [selectedWeightRanges, setSelectedWeightRanges] = useState<string[]>(
+    [],
+  );
   const [showFilters, setShowFilters] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -42,7 +46,10 @@ export default function RacketsPage() {
 
   const indexOfLastRacket = currentPage * itemsPerPage;
   const indexOfFirstRacket = indexOfLastRacket - itemsPerPage;
-  const currentRackets = filteredRackets.slice(indexOfFirstRacket, indexOfLastRacket);
+  const currentRackets = filteredRackets.slice(
+    indexOfFirstRacket,
+    indexOfLastRacket,
+  );
   const totalPages = Math.ceil(filteredRackets.length / itemsPerPage);
 
   useEffect(() => {
@@ -118,7 +125,9 @@ export default function RacketsPage() {
   // fix unpatched name values by truncating to first 3 words
   const truncate = (name: string, wordCount: number = 4): string => {
     const words = name.split("-");
-    const capitalizedWords = words.map(word => word.charAt(0).toUpperCase() + word.slice(1));
+    const capitalizedWords = words.map(
+      (word) => word.charAt(0).toUpperCase() + word.slice(1),
+    );
     return capitalizedWords.slice(0, wordCount).join(" ");
   };
 
@@ -351,14 +360,18 @@ export default function RacketsPage() {
                     setCurrentPage((prev) => Math.max(prev - 1, 1))
                   }
                   disabled={currentPage === 1}
-                  className={`px-4 py-2 rounded-full ${currentPage === 1
+                  className={`px-4 py-2 rounded-full ${
+                    currentPage === 1
                       ? "bg-gray-300 cursor-not-allowed"
                       : "bg-[#FFC038] text-black hover:bg-[#FFB800] hover:cursor-pointer"
-                    }`}
+                  }`}
                 >
                   ← Previous
                 </button>
 
+                <span className="text-gray-700">
+                  Page {currentPage} of {totalPages}
+                </span>
                 <span className="text-gray-700">
                   Page {currentPage} of {totalPages}
                 </span>
@@ -368,10 +381,11 @@ export default function RacketsPage() {
                     setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                   }
                   disabled={currentPage === totalPages}
-                  className={`px-4 py-2 rounded-full ${currentPage === totalPages
+                  className={`px-4 py-2 rounded-full ${
+                    currentPage === totalPages
                       ? "bg-gray-300 cursor-not-allowed"
                       : "bg-[#FFC038] text-black hover:bg-[#FFB800] hover:cursor-pointer"
-                    }`}
+                  }`}
                 >
                   Next →
                 </button>
