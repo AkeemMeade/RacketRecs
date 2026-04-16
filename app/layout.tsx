@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
+import { NavbarProvider } from "@/components/ui/navbar-context";
+import { SideNavbar } from "@/components/SideNavbar";
 import { UserProvider } from "@/lib/UserContext";
-import { ClerkProvider } from "@clerk/nextjs";
+import { ChatWidget } from "@/components/ChatWidget";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,7 +16,7 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
-  
+
 export const metadata: Metadata = {
   title: "RacketRecs",
   description: "Find your personalized own racket",
@@ -26,17 +28,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-  <ClerkProvider>
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <UserProvider>
-          <Navbar/>
-          {children}
-        </UserProvider>
+        <NavbarProvider>
+          <UserProvider>
+          <SideNavbar />
+          <Navbar />
+          <main className="pt-16">
+            {children}
+          </main>
+          </UserProvider>
+          <ChatWidget />
+        </NavbarProvider>
       </body>
     </html>
-  </ClerkProvider>
   );
 }

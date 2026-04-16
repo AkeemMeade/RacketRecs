@@ -42,7 +42,13 @@ export async function GET(request: Request) {
 
   const { data, error } = await supabase
     .from("favorites")
-    .select("racket_id")  // Select the racket_id from the favorites table and also join with the rackets table to get the name and img_url of each favorited racket
+    .select(`
+      racket_id,
+      racket:racket_id (
+      name,
+      img_url
+      )
+    `)  // Select the racket_id from the favorites table and also join with the rackets table to get the name and img_url of each favorited racket
     .eq("user_id", userId);  // Filter the favorites by the userId to get only the favorites for the specific user
 
   if (error) {

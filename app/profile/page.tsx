@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { Outfit } from "next/font/google";
+import { useUser } from "@/lib/UserContext";
 import Link from "next/link";
-import { useUser } from "@clerk/nextjs";
 
 
 const outfit = Outfit({
@@ -38,7 +38,7 @@ function SectionCard({
 
 interface Favorite {
   racket_id: string;
-  rackets: {
+  racket: {
     name: string;
     img_url: string;
   };
@@ -77,7 +77,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <main className={`${outfit.className} min-h-screen`}>
+    <main className={`${outfit.className} min-h-screen -mt-25`}>
       <div className="fixed inset-0 bg-gradient-to-b from-blue-400 via-blue-300 to-blue-200 -z-10" />
       <div className="mx-auto w-full max-w-6xl px-4 py-10"></div>
       <div className="mx-auto w-full max-w-6xl px-4 py-10">
@@ -91,14 +91,13 @@ export default function ProfilePage() {
             data are connected.
           </p>
         </div>
-
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* Left Column */}
           <div className="lg:col-span-1 space-y-6">
             <SectionCard
               title="Personal Information"
               subtitle="User details will populate here."
-                right={
+              right={
                 <Link
                   href="/preferences"
                   className="rounded-full bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-amber-300"
@@ -138,12 +137,12 @@ export default function ProfilePage() {
                       className="flex items-center gap-3 rounded-xl bg-slate-50 px-4 py-3 ring-1 ring-slate-100 hover:ring-blue-400 hover:bg-blue-50 transition"
                     >
                       <img
-                        src={fav.rackets?.img_url || "/placeholder-racket.png"}
-                        alt={fav.rackets?.name}
+                        src={fav.racket?.img_url || "/placeholder-racket.png"}
+                        alt={fav.racket?.name}
                         className="h-12 w-12 object-contain shrink-0"
                       />
                       <span className="text-sm font-semibold text-slate-800">
-                        {truncate(fav.rackets?.name || "", 3)}
+                        {truncate(fav.racket?.name || "", 3)}
                       </span>
                     </Link>
                   ))}
