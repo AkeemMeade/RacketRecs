@@ -6,6 +6,8 @@ import { Outfit, Roboto } from "next/font/google";
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderOutlinedIcon from '@mui/icons-material/FavoriteBorderOutlined';
 import { useUser } from "@/lib/UserContext";
+import StarRating from "@/components/StarRating";
+import ReviewsSection from "@/components/ReviewsSection";
 
 
 
@@ -93,15 +95,17 @@ export default function RacketDetails({
           className={`${outfit.className} bg-white/85 rounded-4xl p-6 shadow-md transition-all duration-300 border border-gray-200 group-hover:border-blue-400 min-h-[700px] flex items-center gap-8`}
         >
           {/* image */}
-          <div className="ml-20 w-1/3 flex justify-center bg-white rounded-lg ">
-            <img
-              src={racket.img_url || "/placeholder-racket.png"}
-              alt={racket.name}
-              className="w-100 h-100 object-contain"
-            />
-          </div>
+        <div className="ml-20 w-1/3 flex flex-col items-center bg-white rounded-lg">
+          <img
+            src={racket.img_url || "/placeholder-racket.png"}
+            alt={racket.name}
+            className="w-100 h-100 object-contain"
+          />
+          <StarRating racketId={racket.racket_id} />
+        </div>
           
           {/* right side */}
+
           <div className="w-1/2 flex flex-col gap-4 ml-25 mr-20">
 
           {/* Favorite icon*/}
@@ -162,8 +166,11 @@ export default function RacketDetails({
               View Retailers
             </a>
           </div>
+          
         </div>
-      </div>
-    </>
+      </div> {/* closes container mx-auto py-12 px-4 */}
+
+    <ReviewsSection racketId={racket.racket_id} />
+  </>
   );
 }

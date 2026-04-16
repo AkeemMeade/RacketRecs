@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { Outfit } from "next/font/google";
+import Link from "next/link";
+import { useUser } from "@clerk/nextjs";
 
 
 const outfit = Outfit({
