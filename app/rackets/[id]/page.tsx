@@ -6,6 +6,8 @@ import { DM_Serif_Display, DM_Sans } from "next/font/google";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import FavoriteBorderOutlinedIcon from "@mui/icons-material/FavoriteBorderOutlined";
 import { Outfit } from "next/font/google";
+import ReviewsSection from "@/components/ReviewsSection";
+import StarRating from "@/components/StarRating";
 
 const dmSerif = DM_Serif_Display({ subsets: ["latin"], weight: "400" });
 const dmSans = DM_Sans({
@@ -272,32 +274,17 @@ export default function RacketDetails({
                     <h2
                       className={`${dmSans.className} text-xs font-semibold tracking-widest uppercase text-blue-400 mb-3`}
                     >
-                      Reviews
                     </h2>
-                    <div className="flex flex-col gap-3">
-                      <div className="bg-sky-50 border border-sky-100 rounded-2xl px-4 py-3">
-                        <div className="flex items-center justify-between mb-1">
-                          <span
-                            className={`${outfit.className} text-sm font-semibold text-black`}
-                          >
-                            Username
-                          </span>
-                          <div className="flex gap-0.5">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <span
-                                key={star}
-                                className="text-[#FFC038] text-sm"
-                              >
-                                ★
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                        <p className={`${outfit.className} text-sm text-black`}>
-                          Review text goes here.
+                    {racket.reviews_count > 0 ? (
+                      <ReviewsSection racketId={racket.racket_id} />
+                    ) : (
+                      <div className="rounded-xl bg-slate-50 px-4 py-10 text-center ring-1 ring-slate-100">
+                        <p className="text-slate-500">
+                          No reviews yet. Be the first to review this racket!
                         </p>
+                        <StarRating racketId={racket.racket_id} />
                       </div>
-                    </div>
+                    )}
                   </div>
                 </>
               ) : (
