@@ -7,6 +7,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import TuneIcon from '@mui/icons-material/Tune';
 import Checkbox from "@mui/material/Checkbox";
+import { GiShuttlecock } from "react-icons/gi";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -19,6 +20,9 @@ interface Racket {
   balance: string;
   weight: string;
   manufacturer_id: number;
+  manufacturer: {
+    name: string;
+  };
   img_url?: string;
 }
 
@@ -56,7 +60,7 @@ export default function RacketsPage() {
           racket.name?.toLowerCase().includes(query) ||
           racket.balance?.toLowerCase().includes(query) ||
           racket.weight?.toLowerCase().includes(query) ||
-          racket.manufacturer_id?.toString().toLowerCase().includes(query),
+          racket.manufacturer?.name?.toLowerCase().includes(query),
       );
     }
 
@@ -69,7 +73,7 @@ export default function RacketsPage() {
 
     if (selectedManufacturers.length > 0) {
       filtered = filtered.filter((racket) =>
-        selectedManufacturers.includes(racket.manufacturer_id?.toString().toLowerCase()),
+        selectedManufacturers.includes(racket.manufacturer?.name)
       );
     }
 
@@ -124,102 +128,22 @@ export default function RacketsPage() {
       <div className="fixed inset-0 bg-gradient-to-b from-blue-400 via-blue-300 to-blue-200 -z-10" />
 
       {/* Main Content */}
-      <div className="-mt-5 max-w-[1250px] mx-auto px-4 py-12">
-        <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-12">
-          <div className="flex justify-between items-center mb-10">
-            <h2
-              className={`text-3xl font-bold text-gray-800 ${outfit.className}`}
+      <div className="-mt-15 max-w-[1250px] mx-auto px-4 py-12">
+
+        <h1
+              className={`text-4xl font-bold tracking-tight text-white drop-shadow-md ${outfit.className} mb-8`}
             >
               Browse Rackets
-            </h2>
-
+          </h1>
+        <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-12">
+          <div className="flex justify-between items-center mb-10">
             <div className="relative">
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={` 
-            ${outfit.className} 
-            text-black bg-[#FFC038] 
-            rounded-full p-3 w-20 
-            hover:opacity-90 
-            hover:cursor-pointer 
-            hover:outline`}
-            >
-              <TuneIcon className="h-5 w-5" />
-            </button>
-
-        
-            {showFilters && (
-              <div className={`absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg p-4 z-20`}  >
-                <h3 className={`font-bold text-black ${outfit.className}`}>Balance</h3>
-
-                <div className="flex">
-                {["Head Heavy", "Head Light", "Even"].map((balance) => (
-                  <label key={balance}>
-                    <Checkbox
-                      checked={selectedBalances.includes(balance)}
-                      onChange={() => {
-                        if (selectedBalances.includes(balance)) {
-                          setSelectedBalances(selectedBalances.filter(b => b !== balance));
-                        } else {
-                          setSelectedBalances([...selectedBalances, balance]);
-                        }
-                      }}
-                    />
-                    {balance}
-                  </label>
-                ))}
-                </div>
-
-                <h3 className={`font-bold text-black ${outfit.className}`}>Manufacturer</h3>
-
-                <div className="flex">
-                {["Yonex", "Wilson", "Babolat", "Head"].map((manufacturer) => (
-                  <label key={manufacturer}>
-                    <Checkbox
-                      checked={selectedManufacturers.includes(manufacturer)}
-                      onChange={() => {
-                        if (selectedManufacturers.includes(manufacturer)) {
-                          setSelectedManufacturers(selectedManufacturers.filter(m => m !== manufacturer));
-                        } else {
-                          setSelectedManufacturers([...selectedManufacturers, manufacturer]);
-                        }
-                      }}
-                    />
-                    {manufacturer}
-                  </label>
-                ))}
-                </div>
-
-                <h3 className={`font-bold text-black ${outfit.className}`}>Weight</h3>
-
-                <div className="flex">
-                {["Yonex", "Wilson", "Babolat", "Head"].map((weight) => (
-                  <label key={weight}>
-                    <Checkbox
-                      checked={selectedWeightRanges.includes(weight)}
-                      onChange={() => {
-                        if (selectedWeightRanges.includes(weight)) {
-                          setSelectedWeightRanges(selectedWeightRanges.filter(w => w !== weight));
-                        } else {
-                          setSelectedWeightRanges([...selectedWeightRanges, weight]);
-                        }
-                      }}
-                    />
-                    {weight}
-                  </label>
-                ))}
-                </div>
-
-
-              </div>
               
-            )}
             </div>
           </div>
-
           {/* Search bar */}
-          <div className="mb-8">
-            <div className="relative">
+          <div className="mb-8 flex gap-5">
+            <div className="relative flex-1">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                 <SearchIcon className="h-5 w-5 text-gray-400" />
               </div>
@@ -246,7 +170,126 @@ export default function RacketsPage() {
                 {filteredRackets.length !== 1 ? "s" : ""}
               </p>
             )}
+            {/* end of Search bar */}
+
+
+            {/* Filter button */}
+            <div className={`relative ${outfit.className}`}>
+            <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={` 
+            ${outfit.className} 
+            text-black bg-[#FFC038] 
+            rounded-full p-3 w-20 
+            hover:opacity-90 
+            hover:cursor-pointer 
+            hover:outline`}
+              >
+                <TuneIcon className="h-5 w-5" />
+              </button>
+
+              {showFilters && (
+                <div
+                  className={`absolute left-43 -mt-34 w-64 bg-white rounded-lg shadow-lg p-4 z-20`}
+                >
+                  <h3 className={`font-bold text-black ${outfit.className}`}>
+                    Balance
+                  </h3>
+
+                  <div className="flex flex-col text-black ">
+                    {["Head Heavy", "Head Light", "Even"].map((balance) => (
+                      <label key={balance}>
+                        <Checkbox sx={{'&.Mui-checked': {
+                          color: '#FFC038'
+                        }}}
+                          checked={selectedBalances.includes(balance)}
+                          onChange={() => {
+                            if (selectedBalances.includes(balance)) {
+                              setSelectedBalances(
+                                selectedBalances.filter((b) => b !== balance),
+                              );
+                            } else {
+                              setSelectedBalances([
+                                ...selectedBalances,
+                                balance,
+                              ]);
+                            }
+                          }}
+                        />
+                        {balance}
+                      </label>
+                    ))}
+                  </div>
+
+                <h3 className={`font-bold text-black ${outfit.className}`}>Manufacturer</h3>
+
+                  <div className="flex flex-col text-black">
+                    {["Yonex", "Victor", "Li-Ning", "Hundred", "Ashaway", "Apacs", "Technist", "Gosen", "Jnice", "Mizuno"].map(
+                      (manufacturer) => (
+                        <label key={manufacturer}>
+                          <Checkbox sx={{'&.Mui-checked': {
+                          color: '#FFC038'
+                        }}}
+                            checked={selectedManufacturers.includes(
+                              manufacturer,
+                            )}
+                            onChange={() => {
+                              if (
+                                selectedManufacturers.includes(manufacturer)
+                              ) {
+                                setSelectedManufacturers(
+                                  selectedManufacturers.filter(
+                                    (m) => m !== manufacturer,
+                                  ),
+                                );
+                              } else {
+                                setSelectedManufacturers([
+                                  ...selectedManufacturers,
+                                  manufacturer,
+                                ]);
+                              }
+                            }}
+                          />
+                          {manufacturer}
+                        </label>
+                      ),
+                    )}
+                  </div>
+
+                <h3 className={`font-bold text-black ${outfit.className}`}>Weight</h3>
+
+                  <div className="flex flex-col text-black">
+                    {["Light", "Medium", "Heavy"].map((weight) => (
+                      <label key={weight}>
+                        <Checkbox sx={{'&.Mui-checked': {
+                          color: '#FFC038'
+                        }}}
+                          checked={selectedWeightRanges.includes(weight)}
+                          onChange={() => {
+                            if (selectedWeightRanges.includes(weight)) {
+                              setSelectedWeightRanges(
+                                selectedWeightRanges.filter(
+                                  (w) => w !== weight,
+                                ),
+                              );
+                            } else {
+                              setSelectedWeightRanges([
+                                ...selectedWeightRanges,
+                                weight,
+                              ]);
+                            }
+                          }}
+                        />
+                        {weight}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+              </div>
           </div>
+          {/*end of filter button */}
+          
 
           {/* Loading State */}
           {loading && (
@@ -286,14 +329,14 @@ export default function RacketsPage() {
                   >
                     <div
                       className={`${outfit.className} bg-white rounded-xl p-6 shadow-md hover:shadow-xl transition-all duration-300 border 
-                        border-gray-200 group-hover:border-blue-400`}
+                        border-gray-200 group-hover:border-blue-400 h-72 flex flex-col`}
                     >
                       <img
                         src={racket.img_url || "/placeholder-racket.png"}
                         alt={racket.name}
-                        className="w-full h-48 object-contain mb-4 group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-48 object-contain mb-4 group-hover:scale-105 transition-transform duration-300 flex-shrink-0"
                       />
-                      <h3 className="text-center font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                      <h3 className="tracking-tightest text-center font-semibold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2 mt-auto">
                         {racket.name}
                       </h3>
                     </div>
@@ -302,7 +345,7 @@ export default function RacketsPage() {
               </div>
 
               {/* Pages */}
-              <div className="flex justify-center items-center gap-4 mt-8">
+              <div className={` ${outfit.className} flex justify-center items-center gap-4 mt-8`}>
                 <button
                   onClick={() =>
                     setCurrentPage((prev) => Math.max(prev - 1, 1))
@@ -313,7 +356,7 @@ export default function RacketsPage() {
                       : "bg-[#FFC038] text-black hover:bg-[#FFB800] hover:cursor-pointer"
                     }`}
                 >
-                  Previous
+                  ← Previous
                 </button>
 
                 <span className="text-gray-700">
@@ -330,7 +373,7 @@ export default function RacketsPage() {
                       : "bg-[#FFC038] text-black hover:bg-[#FFB800] hover:cursor-pointer"
                     }`}
                 >
-                  Next
+                  Next →
                 </button>
               </div>
             </>

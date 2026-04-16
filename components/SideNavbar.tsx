@@ -27,7 +27,7 @@ const Menus = [
   { title: "Favorites", href: "/favorites", icon: <FaRegHeart size={24} /> },
   {
     title: "Recommendations",
-    href: "/rackets",
+    href: "/recommendation",
     icon: <FaRegThumbsUp size={24} />,
   },
   {
@@ -46,7 +46,7 @@ const Menus = [
 ];
 
 const BottomMenus = [
-  { title: "Preferences", href: "/settings", icon: <FaGear size={24} /> },
+  { title: "Preferences", href: "/account", icon: <FaGear size={24} /> },
   { title: "Sign Out", href: "/sign-out", icon: <FaSignOutAlt size={24} /> },
 ];
 
@@ -96,7 +96,7 @@ export function SideNavbar() {
     <div className="flex">
       <div
         // bg-gradient-to-b from-amber-400 to-amber-300
-        className={`fixed top-0 left-0 bg-white h-screen p-5 pt-8 transition-all duration-300 ${open ? "w-72" : "w-20"} z-50 shadow-2xl`}
+        className={`fixed top-0 left-0 bg-white h-screen p-5 pt-8 transition-all duration-300 ${open ? "w-72" : "w-20"} z-70 shadow-2xl`}
       >
         <div className="flex items-center h-10">
           {/* logo */}
@@ -136,7 +136,8 @@ export function SideNavbar() {
       { /*> Overlay */}
       {open && (
         <div
-          className="fixed inset-0 bg-black/40 z-40 transition-opacity duration-300"
+          className="fixed inset-0 bg-black/40 z-45 transition-opacity duration-300"
+          style={{zIndex: 60}}
           onClick={() => setOpen(false)}
         />
       )}
