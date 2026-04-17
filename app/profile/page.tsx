@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import { Outfit } from "next/font/google";
 import { useUser } from "@/lib/UserContext";
-import Link from "next/link";
 
 
 const outfit = Outfit({
@@ -45,7 +45,7 @@ interface Favorite {
 }
 
 export default function ProfilePage() {
-  const { user } = useUser();
+  const [user, setUser] = useState<any>(null);
   const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [loadingFavs, setLoadingFavs] = useState(true);
 
