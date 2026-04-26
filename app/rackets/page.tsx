@@ -2,11 +2,12 @@
 
 import { Outfit, Roboto } from "next/font/google";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
 import TuneIcon from "@mui/icons-material/Tune";
 import Checkbox from "@mui/material/Checkbox";
+import { createClient } from "@/lib/supabase/client";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -23,6 +24,7 @@ interface Racket {
 }
 
 export default function RacketsPage() {
+  const supabase = useMemo(() => createClient(), []);
   const [rackets, setRackets] = useState<Racket[]>([]);
   const [filteredRackets, setFilteredRackets] = useState<Racket[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -115,6 +117,35 @@ export default function RacketsPage() {
       setLoading(false);
     }
   };
+
+  const addToBrowsingHistory = async (racketId: string | number) => {
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    console.log("User not logged in. Browsing history not saved.");
+    return;
+  }
+
+  const { error } = await supabase
+    .from("browsing_history")
+    .upsert(
+      {
+        user_id: user.id,
+        racket_id: Number(racketId),
+        viewed_at: new Date().toISOString(),
+      },
+      {
+        onConflict: "user_id,racket_id",
+      }
+    );
+
+  if (error) {
+    console.error("Failed to save browsing history:", error.message);
+  }
+};
 
   const handleClearSearch = () => {
     setSearchQuery("");
@@ -323,6 +354,7 @@ export default function RacketsPage() {
                     key={racket.racket_id}
                     href={`/rackets/${racket.racket_id}`}
                     className="group"
+                    onClick={() => addToBrowsingHistory(racket.racket_id)}
                   >
                     <div
                       className={`${outfit.className} bg-white rounded-xl p-6 shadow-md hover:shadow-xl transition-all duration-300 border 

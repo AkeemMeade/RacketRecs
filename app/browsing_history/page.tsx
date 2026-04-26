@@ -47,16 +47,24 @@ interface BrowsingHistoryItem {
     name: string | null;
     img_url: string | null;
     manufacturer_id: number | null;
+    manufacturer: {
+      name: string | null;
+    } | null;
   } | null;
 }
+
 export default function BrowsingHistoryPage() {
   const supabase = useMemo(() => createClient(), []);
-
+  const [mounted, setMounted] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [history, setHistory] = useState<BrowsingHistoryItem[]>([]);
   const [loadingUser, setLoadingUser] = useState(true);
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [clearing, setClearing] = useState(false);
+
+  useEffect(() => {
+  setMounted(true);
+}, []);
 
   useEffect(() => {
     const getUser = async () => {
@@ -105,7 +113,10 @@ const fetchHistory = async (currentUserId: string) => {
         racket_id,
         name,
         img_url,
-        manufacturer_id
+        manufacturer_id,
+        manufacturer:manufacturer_id (
+          name
+        )
       )
     `)
     .eq("user_id", currentUserId)
@@ -171,7 +182,15 @@ const fetchHistory = async (currentUserId: string) => {
     });
   };
 
-  const isLoading = loadingUser || loadingHistory;
+const isLoading = loadingUser || loadingHistory;
+
+if (!mounted) {
+  return (
+    <main className={`${outfit.className} min-h-screen`}>
+      <div className="fixed inset-0 -z-10 bg-gradient-to-b from-blue-400 via-blue-300 to-blue-200" />
+    </main>
+  );
+}
 
   return (
     <main className={`${outfit.className} min-h-screen`}>
@@ -228,7 +247,7 @@ const fetchHistory = async (currentUserId: string) => {
                 </button>
 
                 <Link
-                  href="/comparison"
+                  href="/rackets"
                   className="block w-full rounded-full bg-slate-900 px-4 py-2 text-center text-sm font-semibold text-white transition hover:bg-slate-800"
                 >
                   Browse More Rackets
@@ -283,9 +302,7 @@ const fetchHistory = async (currentUserId: string) => {
                         </p>
 
                         <p className="mt-1 text-xs text-slate-500">
-                          {item.racket?.manufacturer_id
-                            ? `Manufacturer #${item.racket.manufacturer_id}`
-                            : "Unknown Manufacturer"}
+                          {item.racket?.manufacturer?.name || "Unknown Manufacturer"}
                         </p>
 
                         <p className="mt-1 text-xs text-slate-500">
