@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { FaBars } from "react-icons/fa6";
 import { Outfit } from "next/font/google";
 import { useNavbar } from "./ui/navbar-context";
@@ -24,7 +24,12 @@ const Menus = [
     href: "/profile",
     icon: <FaRegCircleUser size={24} />,
   },
-  { title: "Favorites", href: "/favorites", icon: <FaRegHeart size={24} /> },
+  {
+    title: "Favorites",
+    href: "/favorites",
+    icon: <FaRegHeart size={24} />,
+    hasNotifications: true,
+  },
   {
     title: "Recommendations",
     href: "/rackets",
@@ -39,10 +44,18 @@ const Menus = [
   { title: "Search", href: "/rackets", icon: <FaSearch size={22} /> },
 
   // comparison tool
-  { title: "Comparison Tool", href: "/comparison", icon: <FaCodeCompare size={22} /> },
+  {
+    title: "Comparison Tool",
+    href: "/comparison",
+    icon: <FaCodeCompare size={22} />,
+  },
 
   // maintenence tracker
-  { title: "Maintenence Tracker", href: "/maintenance tracker", icon: <FaWrench size={22} /> },
+  {
+    title: "Maintenence Tracker",
+    href: "/maintenance tracker",
+    icon: <FaWrench size={22} />,
+  },
 ];
 
 const BottomMenus = [
@@ -61,11 +74,33 @@ export function SideNavbar() {
   const { open, setOpen } = useNavbar();
   const { user, loading } = useUser();
   const router = useRouter();
-
+  const [unreadCount, setUnreadCount] = useState(0);
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     router.push("/sign-in");
   };
+
+  // Fetch unread notification count
+  useEffect(() => {
+    if (!user) return;
+
+    async function fetchUnreadCount() {
+      try {
+        const res = await fetch(`/api/notifications?userId=${user.id}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        const unread = data.filter((n: any) => !n.read).length;
+        setUnreadCount(unread);
+      } catch (err) {
+        console.error("Failed to load notifications:", err);
+      }
+    }
+
+    fetchUnreadCount();
+
+    const interval = setInterval(fetchUnreadCount, 60000); // Refresh every 60s
+    return () => clearInterval(interval);
+  }, [user]);
 
   if (loading || !user) {
     return null;
@@ -74,19 +109,33 @@ export function SideNavbar() {
   const renderMenus = (menu: any, index: number) => (
     <li
       key={index}
-      className={` ${outfit.className} text-black font-semibold p-2 flex hover:bg-[#FFC038] rounded-lg
+      className={`${outfit.className} text-black font-semibold p-2 flex hover:bg-[#FFC038] rounded-lg
          cursor-pointer gap-x-4 items-center transition-all duration-50 mb-4 ${menu.spacing ? "mt-10" : ""} ${open ? "justify-start" : "justify-center"}`}
       onClick={menu.title === "Sign Out" ? handleSignOut : undefined}
     >
-      <Link href={menu.href} className="flex w-full">
-        {/* menu.icon */}
-        <span className="">{menu.icon}</span>
+      <Link href={menu.href} className="flex w-full relative">
+        {/* Icon with notification badge */}
+        <span className="relative">
+          {menu.icon}
+          {/* Notification badge for Favorites */}
+          {menu.hasNotifications && unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
+          )}
+        </span>
 
         <span
           className={`ml-2 overflow-hidden whitespace-nowrap transition-all duration-300 ${open ? "opacity-100 max-w-xs delay-150" : "opacity-0 max-w-0"} 
         text-black`}
         >
           {menu.title}
+          {/* Show count in text when sidebar is open */}
+          {menu.hasNotifications && unreadCount > 0 && open && (
+            <span className="ml-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+              {unreadCount}
+            </span>
+          )}
         </span>
       </Link>
     </li>
@@ -116,7 +165,7 @@ export function SideNavbar() {
           />
         </div>
 
-          {/* Separator Top */}
+        {/* Separator Top */}
         <div className="w-full h-[1px] bg-gray-300 mt-1" />
 
         {/* Top section */}
@@ -133,7 +182,7 @@ export function SideNavbar() {
         </ul>
       </div>
 
-      { /*> Overlay */}
+      {/*> Overlay */}
       {open && (
         <div
           className="fixed inset-0 bg-black/40 z-40 transition-opacity duration-300"

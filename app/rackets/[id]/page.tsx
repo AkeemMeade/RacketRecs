@@ -22,6 +22,7 @@ interface RetailerPrice {
   price: number;
   product_url: string;
   website: string;
+  in_stock: boolean;
 }
 
 export default function RacketDetails({
@@ -80,6 +81,7 @@ export default function RacketDetails({
           retailer_id,
           price,
           product_url,
+          in_stock,
           retailer (
             name,
             website
@@ -96,9 +98,16 @@ export default function RacketDetails({
             price: item.price,
             product_url: item.product_url,
             website: item.retailer.website,
+            in_stock: item.in_stock ?? true, // Default to true if null
           }),
         );
-        formattedRetailers.sort((a, b) => a.price - b.price);
+        // Sort: in-stock first (by price), then out-of-stock
+        formattedRetailers.sort((a, b) => {
+          if (a.in_stock && !b.in_stock) return -1;
+          if (!a.in_stock && b.in_stock) return 1;
+          return a.price - b.price;
+        });
+        
         setRetailers(formattedRetailers);
         console.log(retailers);
       }
@@ -133,9 +142,10 @@ export default function RacketDetails({
     );
   }
 
+  const inStockRetailers = retailers.filter(r => r.in_stock);
   const lowestPrice =
-    retailers.length > 0
-      ? Math.min(...retailers.map((r) => r.price)).toFixed(2)
+    inStockRetailers.length > 0
+      ? Math.min(...inStockRetailers.map((r) => r.price)).toFixed(2)
       : null;
 
   const truncate = (name: string, wordCount = 3): string =>
@@ -249,7 +259,7 @@ export default function RacketDetails({
                       <span
                         className={`${dmSans.className} text-xs font-semibold tracking-widest uppercase text-blue-400`}
                       >
-                        {lowestPrice ? "Starting at" : "Retail Price"}
+                        {lowestPrice ? "Starting at" : "Currently Unavailable"}
                       </span>
                       <p
                         className={`${outfit.className} text-4xl text-black leading-tight`}
@@ -318,50 +328,77 @@ export default function RacketDetails({
                           href={retailer.product_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center justify-between p-4 bg-white rounded-2xl border border-sky-100 hover:border-blue-400 hover:shadow-md transition-all"
+                          className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${
+                            retailer.in_stock
+                              ? "bg-white border-sky-100 hover:border-blue-400 hover:shadow-md cursor-pointer"
+                              : "bg-gray-50 border-gray-200 opacity-60 cursor-not-allowed"
+                          }`}
+                          onClick={(e) => {
+                            if (!retailer.in_stock) {
+                              e.preventDefault();
+                            }
+                          }}
                         >
                           <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 flex items-center justify-center bg-gray-50 rounded-lg overflow-hidden">
+                            <div className={`w-12 h-12 flex items-center justify-center rounded-lg overflow-hidden ${
+                              retailer.in_stock ? "bg-gray-50" : "bg-gray-100"
+                            }`}>
                               <img
                                 src={getRetailerLogo(retailer.retailer_name)}
                                 alt={getRetailerDisplayName(
                                   retailer.retailer_name,
                                 )}
-                                className="w-full h-full object-contain"
+                                className={`w-full h-full object-contain ${
+                                  !retailer.in_stock ? "grayscale" : ""
+                                }`}
                                 onError={(e) => {
                                   (e.target as HTMLImageElement).style.display =
                                     "none";
                                   (
                                     e.target as HTMLImageElement
                                   ).parentElement!.innerHTML =
-                                    `<span class="text-lg font-bold text-gray-600">${getRetailerDisplayName(retailer.retailer_name)[0]}</span>`;
+                                    `<span class="text-lg font-bold ${retailer.in_stock ? "text-gray-600" : "text-gray-400"}">${getRetailerDisplayName(retailer.retailer_name)[0]}</span>`;
                                 }}
                               />
                             </div>
                             <div>
                               <p
-                                className={`${dmSans.className} text-sm font-semibold text-gray-900`}
+                                className={`${dmSans.className} text-sm font-semibold ${
+                                  retailer.in_stock ? "text-gray-900" : "text-gray-400"
+                                }`}
                               >
                                 {getRetailerDisplayName(retailer.retailer_name)}
                               </p>
                               <p
-                                className={`${dmSans.className} text-xs text-gray-400`}
+                                className={`${dmSans.className} text-xs ${
+                                  retailer.in_stock ? "text-gray-400" : "text-gray-300"
+                                }`}
                               >
-                                {retailer.website}
+                                {retailer.in_stock ? retailer.website : "Out of stock"}
                               </p>
                             </div>
                           </div>
                           <div className="text-right">
-                            <p
-                              className={`${outfit.className} text-xl font-bold text-gray-900`}
-                            >
-                              ${retailer.price.toFixed(2)}
-                            </p>
-                            <p
-                              className={`${dmSans.className} text-xs text-blue-400`}
-                            >
-                              View at store →
-                            </p>
+                            {retailer.in_stock ? (
+                              <>
+                                <p
+                                  className={`${outfit.className} text-xl font-bold text-gray-900`}
+                                >
+                                  ${retailer.price.toFixed(2)}
+                                </p>
+                                <p
+                                  className={`${dmSans.className} text-xs text-blue-400`}
+                                >
+                                  View at store →
+                                </p>
+                              </>
+                            ) : (
+                              <p
+                                className={`${dmSans.className} text-sm font-semibold text-gray-400`}
+                              >
+                                Out of Stock
+                              </p>
+                            )}
                           </div>
                         </a>
                       ))}
