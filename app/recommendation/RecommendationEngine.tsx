@@ -1,15 +1,14 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import {Card, CardContent, Box, Stack, Typography, Divider} from '@mui/material';
-
+import { Card, CardContent, Box, Typography } from '@mui/material';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
 );
 
-interface Racket{
+interface Racket {
   racket_id?: number;
   manufacturer_id?: number;
   name?: string;
@@ -21,145 +20,132 @@ interface Racket{
   description?: string;
   color?: string;
   weight?: string;
-  img_url?: string;  
+  img_url?: string;
+  summary?: string; // added
 }
 
-
-
 export default function RecommendationEngine() {
-  const [choice, setChoice] = useState([]);
+  const [choice, setChoice] = useState<Racket[]>([]);
 
-  useEffect(() =>{
+  useEffect(() => {
+    const getRec = async () => {
+      const { data: ans } = await supabase
+        .from('assessment_response')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
 
-    const getRec = async() => {
-      const{ data: ans} = await supabase
-      .from('assessment_response')
-      .select('*')
-      .order('created_at', {ascending: false})
-      .limit(1)
-      .single();
-
-      const answerF= {
+      const answerF = {
         experience: ans.experience,
         playstyle: ans.playstyle,
         playloc: ans.playloc,
         brand: ans.brand,
-
         movement: ans.movement,
         event: ans.event,
         strength: ans.strength,
         injury: ans.injury,
         feel: ans.feel,
         budget: ans.budget,
+      };
 
-        };
-
-
-      const res = await fetch('http://localhost:3001/api/recommend',{
+      const summaryRes = await fetch('/api/recommend-summary', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(answerF),
-
-
       });
 
-      const rec = await res.json();
-      setChoice(rec)
- 
+      const rackets: Racket[] = await summaryRes.json();
 
+      // Generate summary for each racket
+      const racketWithSummaries = await Promise.all(
+        rackets.map(async (racket) => {
+          const summaryRes = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              messages: [
+                {
+                  role: 'user',
+                  content: `The user has the following profile:
+- Experience: ${answerF.experience}
+- Playstyle: ${answerF.playstyle}
+- Play location: ${answerF.playloc}
+- Movement: ${answerF.movement}
+- Strength: ${answerF.strength}
+- Event: ${answerF.event}
+- Injury: ${answerF.injury}
+- Feel preference: ${answerF.feel}
+- Budget: ${answerF.budget}
 
-    }
+The recommended racket is:
+- Name: ${racket.name}
+- Balance: ${racket.balance}
+- Stiffness: ${racket.stiffness}
+- Max Tension: ${racket.max_tension}
+- Weight: ${racket.weight}
+- Price: $${racket.price}
+
+In 2-3 sentences, explain why this racket is a good match for this user. Be specific and concise.`,
+                },
+              ],
+            }),
+          });
+
+          const summaryData = await summaryRes.json();
+          return { ...racket, summary: summaryData.reply };
+        })
+      );
+
+      setChoice(racketWithSummaries);
+    };
+
     getRec();
-    
-  },[]);
+  }, []);
 
-  return(
+  return (
     <div>
       <div className="fixed inset-0 bg-gradient-to-b from-blue-400 via-blue-300 to-blue-200 -z-10" />
-      
-
-      <Box sx = {{justifyContent: 'center', display: 'flex'}}>
-        <Card sx = {{width: 500,borderRadius:'16px', bgcolor: 'rgba(255, 255, 255, 0.85)' , mt:8}}>
-
-          <Box sx = {{borderBottom : "4px solid #000000" }}>
-            <Typography variant = "h5" sx={{textAlign: 'center', fontWeight: '1000', fontSize:'45px'}}>
+      <Box sx={{ justifyContent: 'center', display: 'flex' }}>
+        <Card sx={{ width: 500, borderRadius: '16px', bgcolor: 'rgba(255, 255, 255, 0.85)', mt: 8 }}>
+          <Box sx={{ borderBottom: '4px solid #000000' }}>
+            <Typography variant="h5" sx={{ textAlign: 'center', fontWeight: '1000', fontSize: '45px' }}>
               Recommendations
             </Typography>
-
-
           </Box>
-          {/* Choice mapping */}
+
           {choice.map((racket, index) => (
-            <CardContent key={index} sx={{borderBottom: index !== choice.length -1? '4px solid #000000': 'none'}}>
-
+            <CardContent key={index} sx={{ borderBottom: index !== choice.length - 1 ? '4px solid #000000' : 'none' }}>
               <Box>
-
-                <Box>
-                  
-                  <Typography variant = "h5" sx={{textAlign: 'left', fontWeight: '500', fontSize:'20px'}}>
-                  
-                  Name : {racket.name}
-                  </Typography>
-                </Box>
-
-                <Box>
-                  <Typography variant = "h5" sx={{textAlign: 'left', fontWeight: '500', fontSize:'20px'}}>
+                <Typography variant="h5" sx={{ textAlign: 'left', fontWeight: '500', fontSize: '20px' }}>
+                  Name: {racket.name}
+                </Typography>
+                <Typography variant="h5" sx={{ textAlign: 'left', fontWeight: '500', fontSize: '20px' }}>
                   Color: {racket.color}
-                  </Typography>
-                </Box>
-
-                <Box>
-                  <Typography variant = "h5" sx={{textAlign: 'left', fontWeight: '500', fontSize:'20px'}}>
+                </Typography>
+                <Typography variant="h5" sx={{ textAlign: 'left', fontWeight: '500', fontSize: '20px' }}>
                   Price: ${racket.price}
+                </Typography>
+
+                {/* Summary */}
+                {racket.summary && (
+                  <Typography sx={{ mt: 1, fontSize: '14px', color: '#444', fontStyle: 'italic' }}>
+                    {racket.summary}
                   </Typography>
-                </Box>
+                )}
 
-                <Box>
-                  <img 
-                    src= {racket.img_url}
-                    alt = {racket.name}
-                    style={{
-
-                      border: '4px solid'
-                    }}
-                  
-
-                  
-                  
-                  
+                <Box sx={{ mt: 1 }}>
+                  <img
+                    src={racket.img_url}
+                    alt={racket.name}
+                    style={{ border: '4px solid' }}
                   />
-                  
-
-
-                
-
                 </Box>
-    
-
-
               </Box>
-
-            </CardContent>     
-
-
+            </CardContent>
           ))}
-      </Card>
-
-
-      
-
+        </Card>
       </Box>
-      
     </div>
-
-
   );
-
-
-
-
-
-
 }
