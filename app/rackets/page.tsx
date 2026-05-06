@@ -133,8 +133,6 @@ export default function RacketsPage() {
 
   return (
     <>
-      {/* gradient */}
-      <div className="fixed inset-0 bg-gradient-to-b from-blue-400 via-blue-300 to-blue-200 -z-10" />
 
       {/* Main Content */}
       <div className="-mt-15 max-w-[1250px] mx-auto px-4 py-12">

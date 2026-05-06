@@ -1,9 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Outfit } from "next/font/google";
+import { useUser } from "@/lib/UserContext";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import { useNavbar } from "@/components/ui/navbar-context";
 
 const outfit = Outfit({ subsets: ["latin"], weight: ["300", "400", "500", "600", "700"] });
+const supabase = createClient();
 
 function SectionCard({
   title,
@@ -49,7 +54,7 @@ function Toggle({ enabled, onChange }: { enabled: boolean; onChange: () => void 
   return (
     <button
       onClick={onChange}
-      className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${
+      className={`relative w-11 h-6 rounded-full transition-colors duration-200 cursor-pointer ${
         enabled ? "bg-[#FFC038]" : "bg-slate-200"
       }`}
     >
@@ -62,7 +67,7 @@ function Toggle({ enabled, onChange }: { enabled: boolean; onChange: () => void 
   );
 }
 
-function DangerButton({ label, onClick }: { label: string; onClick: () => void }) {
+function DeleteAccount({ label, onClick }: { label: string; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
@@ -98,7 +103,7 @@ function ConfirmModal({
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 px-4 py-2.5 rounded-full bg-red-500 text-white text-sm font-semibold hover:bg-red-600 transition"
+            className="flex-1 px-4 py-2.5 rounded-full bg-red-500 text-gray-800 text-sm font-semibold hover:bg-red-600 transition"
           >
             Confirm
           </button>
@@ -109,35 +114,68 @@ function ConfirmModal({
 }
 
 export default function SettingsPage() {
-  // Preferences
+  const { user } = useUser();
+  const router = useRouter();
+  const { isDark, setIsDark } = useNavbar();
   const [darkMode, setDarkMode] = useState(false);
   const [publicProfile, setPublicProfile] = useState(false);
   const [emailNotifications, setEmailNotifications] = useState(true);
 
-  // Name editing
-  const [name, setName] = useState("Your Name");
+  const [username, setUsername] = useState("");
   const [editingName, setEditingName] = useState(false);
-  const [nameInput, setNameInput] = useState(name);
+  const [nameInput, setNameInput] = useState("");
 
-  // Modal
   const [modal, setModal] = useState<{
     title: string;
     description: string;
     onConfirm: () => void;
   } | null>(null);
 
+  useEffect(() => {
+    if (!user) return;
+    async function fetchProfile() {
+      const { data } = await supabase
+        .from("profiles")
+        .select("username")
+        .eq("id", user!.id)
+        .single();
+      if (data?.username) {
+        setUsername(data.username);
+        setNameInput(data.username);
+      }
+    }
+    fetchProfile();
+  }, [user]);
+
   const confirm = (title: string, description: string, onConfirm: () => void) => {
     setModal({ title, description, onConfirm });
   };
 
-  const handleSaveName = () => {
-    setName(nameInput);
-    setEditingName(false);
+  const handleSaveName = async () => {
+    if (!user) return;
+    const { error } = await supabase
+      .from("profiles")
+      .upsert({ id: user.id, username: nameInput });
+
+    if (!error) {
+      setUsername(nameInput);
+      setEditingName(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+    await fetch("/api/user/delete", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: user.id }),
+    });
+    await supabase.auth.signOut();
+    router.push("/sign-in");
   };
 
   return (
     <main className={`${outfit.className} min-h-screen`}>
-      <div className="fixed inset-0 bg-gradient-to-b from-blue-400 via-blue-300 to-blue-200 -z-10" />
 
       {modal && (
         <ConfirmModal
@@ -157,17 +195,17 @@ export default function SettingsPage() {
 
           {/* Account Details */}
           <SectionCard title="Account Details" subtitle="Manage your personal information">
-            <SettingRow label="Display Name" description="This is how you appear on RacketRecs">
+            <SettingRow label="Username" description="This is how you appear on RacketRecs">
               {editingName ? (
                 <div className="flex items-center gap-2">
                   <input
                     value={nameInput}
                     onChange={(e) => setNameInput(e.target.value)}
-                    className="text-sm border border-slate-200 rounded-lg px-3 py-1.5 outline-none focus:border-blue-400 w-36"
+                    className="text-sm border border-slate-200 rounded-lg px-3 py-1.5 outline-none focus:border-blue-400 w-36 text-gray-800"
                   />
                   <button
                     onClick={handleSaveName}
-                    className="text-xs px-3 py-1.5 bg-[#FFC038] text-white rounded-full font-semibold hover:opacity-90 transition"
+                    className="text-xs px-3 py-1.5 bg-[#FFC038] text-gray-800 rounded-full font-semibold hover:opacity-90 transition"
                   >
                     Save
                   </button>
@@ -180,9 +218,9 @@ export default function SettingsPage() {
                 </div>
               ) : (
                 <div className="flex items-center gap-3">
-                  <span className="text-sm text-slate-600">{name}</span>
+                  <span className="text-sm text-slate-600">{username || "Not set"}</span>
                   <button
-                    onClick={() => { setNameInput(name); setEditingName(true); }}
+                    onClick={() => setEditingName(true)}
                     className="text-xs px-3 py-1.5 border border-slate-200 text-slate-500 rounded-full font-semibold hover:bg-slate-50 transition"
                   >
                     Edit
@@ -192,7 +230,7 @@ export default function SettingsPage() {
             </SettingRow>
 
             <SettingRow label="Email" description="Connected to your account">
-              <span className="text-sm text-slate-400">youremail@gmail.com</span>
+              <span className="text-sm text-slate-400">{user?.email}</span>
             </SettingRow>
 
             <SettingRow label="Password" description="Last changed never">
@@ -205,7 +243,7 @@ export default function SettingsPage() {
           {/* Preferences */}
           <SectionCard title="Preferences" subtitle="Customize your experience">
             <SettingRow label="Dark Mode" description="Switch to a darker interface">
-              <Toggle enabled={darkMode} onChange={() => setDarkMode(!darkMode)} />
+              <Toggle enabled={isDark} onChange={() => setIsDark(!isDark)} />
             </SettingRow>
 
             <SettingRow label="Public Profile" description="Allow others to view your profile">
@@ -217,51 +255,15 @@ export default function SettingsPage() {
             </SettingRow>
           </SectionCard>
 
-          {/* Data Management */}
-          <SectionCard title="Data Management" subtitle="Clear specific data from your account">
-            <SettingRow label="Favorites" description="Remove all saved rackets">
-              <DangerButton
-                label="Clear all"
-                onClick={() => confirm(
-                  "Clear all favorites?",
-                  "This will permanently remove all your saved rackets. This cannot be undone.",
-                  () => console.log("clear favorites")
-                )}
-              />
-            </SettingRow>
-
-            <SettingRow label="Recommendations" description="Remove all generated recommendations">
-              <DangerButton
-                label="Clear all"
-                onClick={() => confirm(
-                  "Clear all recommendations?",
-                  "This will permanently delete all your racket recommendations. This cannot be undone.",
-                  () => console.log("clear recommendations")
-                )}
-              />
-            </SettingRow>
-
-            <SettingRow label="Assessments" description="Remove all completed assessments">
-              <DangerButton
-                label="Clear all"
-                onClick={() => confirm(
-                  "Clear all assessments?",
-                  "This will permanently delete all your assessment responses. This cannot be undone.",
-                  () => console.log("clear assessments")
-                )}
-              />
-            </SettingRow>
-          </SectionCard>
-
-          {/* Danger Zone */}
-          <SectionCard title="Danger Zone" subtitle="Irreversible account actions">
+          {/* Account Deletion */}
+          <SectionCard title="Account Deletion" subtitle="Permanently remove your account and all associated data">
             <SettingRow label="Delete Account" description="Permanently delete your account and all associated data">
-              <DangerButton
+              <DeleteAccount
                 label="Delete account"
                 onClick={() => confirm(
                   "Delete your account?",
                   "This will permanently delete your account, all favorites, assessments, and recommendations. This action cannot be undone.",
-                  () => console.log("delete account")
+                  handleDeleteAccount
                 )}
               />
             </SettingRow>

@@ -95,7 +95,6 @@ export function SideNavbar() {
   return (
     <div className="flex">
       <div
-        // bg-gradient-to-b from-amber-400 to-amber-300
         className={`fixed top-0 left-0 bg-white h-screen p-5 pt-8 transition-all duration-300 ${open ? "w-72" : "w-20"} z-70 shadow-2xl`}
       >
         <div className="flex items-center h-10">

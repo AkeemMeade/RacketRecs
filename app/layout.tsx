@@ -6,6 +6,7 @@ import { NavbarProvider } from "@/components/ui/navbar-context";
 import { SideNavbar } from "@/components/SideNavbar";
 import { UserProvider } from "@/lib/UserContext";
 import { ChatWidget } from "@/components/ChatWidget";
+import { AppBackground } from "@/components/AppBackground";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,8 +35,10 @@ export default function RootLayout({
       >
         <NavbarProvider>
           <UserProvider>
+            <AppBackground />
           <SideNavbar />
           <Navbar />
+          
           <main className="pt-16">
             {children}
           </main>

@@ -173,7 +173,6 @@ export default function RacketDetails({
 
   return (
     <>
-      <div className="fixed inset-0 bg-gradient-to-b from-blue-400 via-blue-300 to-blue-200 -z-10" />
       <div className="container mx-auto py-14 px-4 max-w-5xl">
         <div className="flex flex-col -mt-10">
           <div className="bg-white/85 backdrop-blur-md rounded-3xl border border-white/90 shadow-[0_4px_32px_rgba(56,130,200,0.08)] overflow-hidden flex h-[600px] -mt-10">
@@ -199,7 +198,7 @@ export default function RacketDetails({
                 <button
                   onClick={handleFavorite}
                   disabled={!userId}
-                  className="w-9 h-9 rounded-full border-2 border-[#FFC038] flex items-center justify-center transition-all hover:bg-[#FFC038] group disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                  className="w-9 h-9 cursor-pointer rounded-full border-2 border-[#FFC038] flex items-center justify-center transition-all hover:bg-[#FFC038] group disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                 >
                   {isFavorited ? (
                     <FavoriteIcon

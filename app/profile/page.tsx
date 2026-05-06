@@ -1,175 +1,294 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, type ChangeEvent } from "react";
 import { Outfit } from "next/font/google";
 import { useUser } from "@/lib/UserContext";
+import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
+import { CiCirclePlus } from "react-icons/ci";
+import { FaEdit } from "react-icons/fa";
 
 
-const outfit = Outfit({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "700"],
-});
+const outfit = Outfit({ subsets: ["latin"], weight: ["300", "400", "500", "600", "700"] });
+const supabase = createClient();
 
-function SectionCard({
-  title,
-  subtitle,
-  children,
-  right,
-}: {
-  title: string;
-  subtitle?: string;
-  children: React.ReactNode;
-  right?: React.ReactNode;
-}) {
-  return (
-    <div className="rounded-2xl bg-white/85 shadow-xl ring-1 ring-white/40 backdrop-blur-md">
-      <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-6 py-5">
-        <div>
-          <h2 className="text-lg font-extrabold text-slate-900">{title}</h2>
-          {subtitle && <p className="mt-1 text-sm text-slate-600">{subtitle}</p>}
-        </div>
-        {right && <div className="shrink-0">{right}</div>}
-      </div>
-      <div className="px-6 py-5">{children}</div>
-    </div>
-  );
-}
-
-interface Favorite {
-  racket_id: string;
-  racket: {
-    name: string;
-    img_url: string;
-  };
+interface Profile {
+  username: string | null;
+  bio: string | null;
+  avatar_url: string | null;
 }
 
 export default function ProfilePage() {
   const { user } = useUser();
-  const [favorites, setFavorites] = useState<Favorite[]>([]);
-  const [loadingFavs, setLoadingFavs] = useState(true);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [bioDraft, setBioDraft] = useState("");
+  const [isEditingBio, setIsEditingBio] = useState(false);
+  const [isSavingBio, setIsSavingBio] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) return;
-
-    const fetchFavorites = async () => {
-      try {
-        const res = await fetch(`/api/rackets/fav?userId=${user.id}`);
-        if (!res.ok) return;
-        const data = await res.json();
-        setFavorites(data);
-      } catch (err) {
-        console.error("Failed to load favorites:", err);
-      } finally {
-        setLoadingFavs(false);
-      }
-    };
-
-    fetchFavorites();
+    async function fetchProfile() {
+      const { data } = await supabase
+        .from("profiles")
+        .select("username, bio, avatar_url")
+        .eq("id", user!.id)
+        .single();
+      setProfile(data);
+      setBioDraft(data?.bio ?? "");
+      setLoading(false);
+    }
+    fetchProfile();
   }, [user]);
 
-  const truncate = (name: string, wordCount = 3): string => {
-    const words = name.split("-");
-    return words
-      .slice(0, wordCount)
-      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-      .join(" ");
+  const profilePicture = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${user.id}/avatar.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("avatars")
+      .upload(fileName, file, { upsert: true });
+
+    if (uploadError) {
+      console.error("Upload error:", uploadError);
+      alert("Failed to upload image. Please try again.");
+      return;
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from("avatars")
+      .getPublicUrl(fileName);
+
+    const avatar_url = publicUrlData.publicUrl;
+
+    await supabase
+      .from("profiles")
+      .update({ avatar_url })
+      .eq("id", user.id);
+
+    setProfile((prev) => prev ? { ...prev, avatar_url } : prev);
   };
 
-  return (
-    <main className={`${outfit.className} min-h-screen -mt-25`}>
-      <div className="fixed inset-0 bg-gradient-to-b from-blue-400 via-blue-300 to-blue-200 -z-10" />
-      <div className="mx-auto w-full max-w-6xl px-4 py-10"></div>
-      <div className="mx-auto w-full max-w-6xl px-4 py-10">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-black tracking-tight text-white drop-shadow-sm">
-            My Profile
-          </h1>
-          <p className="mt-2 max-w-2xl text-white/90">
-            Your account dashboard will appear here once authentication and user
-            data are connected.
-          </p>
-        </div>
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          {/* Left Column */}
-          <div className="lg:col-span-1 space-y-6">
-            <SectionCard
-              title="Personal Information"
-              subtitle="User details will populate here."
-              right={
-                <Link
-                  href="/preferences"
-                  className="rounded-full bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-amber-300"
-                >
-                  Preferences
-                </Link>
-              }
-            >
-              <div className="rounded-xl bg-slate-50 px-4 py-6 text-center ring-1 ring-slate-100">
-                <p className="text-sm text-slate-500">No user data loaded.</p>
-              </div>
-            </SectionCard>
+  const handleBioSave = async () => {
+    if (!user) return;
+    if (bioDraft === profile?.bio) return;
 
-            {/* Favorites */}
-            <SectionCard
-              title="Favorites"
-              subtitle={`${favorites.length} saved racket${favorites.length !== 1 ? "s" : ""}`}
-            >
-              {loadingFavs ? (
-                <div className="flex justify-center py-6">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+    setIsSavingBio(true);
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({ bio: bioDraft })
+      .eq("id", user.id);
+
+    setIsSavingBio(false);
+
+    if (error) {
+      console.error("Bio save error:", error);
+      alert("Failed to save bio. Please try again.");
+      return;
+    }
+
+    setProfile((prev) => (prev ? { ...prev, bio: bioDraft } : prev));
+    setIsEditingBio(false);
+  };
+
+  const handleBioEdit = () => {
+    setIsEditingBio(true);
+    setBioDraft(profile?.bio ?? "");
+  };
+
+  const handleBioCancel = () => {
+    setBioDraft(profile?.bio ?? "");
+    setIsEditingBio(false);
+  };
+
+  const tabs = ["Marketplace", "Posts", "Favorites", "Activity"] as const;
+  const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>("Marketplace");
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-blue-300 border-t-white rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  const initials = profile?.username
+    ? profile.username.slice(0, 2).toUpperCase()
+    : user?.email?.slice(0, 2).toUpperCase();
+
+  return (
+    <main className={`${outfit.className} `}>
+
+      <div className="max-w-5xl mx-auto px-4 py-10 space-y-6 -mt-10">
+        <div className="rounded-2xl bg-white/85 shadow-xl backdrop-blur-md overflow-hidden ring-2 ring-[white]">
+
+          {/* Banner */}
+          {/* edit banner color*/}
+          
+          <div className="h-36 bg-gradient-to-r from-blue-900"/>  
+          <div className="px-8 py-8 md:px-10 md:py-10">
+            <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  {profile?.avatar_url ? (
+                    <img
+                      src={profile.avatar_url}
+                      alt="avatar"
+                      className="w-28 h-28 rounded-full object-cover ring-4 ring-white shadow-lg"
+                    />
+                  ) : (
+                    <div className="w-28 h-28 rounded-full bg-[#FFC038] ring-4 ring-white shadow-lg flex items-center justify-center text-white text-3xl font-bold">
+                      {initials}
+                    </div>
+                  )}
+                  <label className="absolute bottom-0 right-0 w-8 h-8 bg-white rounded-full shadow border border-slate-200 flex items-center justify-center cursor-pointer hover:bg-slate-50 transition">
+                    <CiCirclePlus className="text-3xl text-slate-500" />
+                    <input type="file" accept="image/*" className="hidden" onChange={profilePicture} />
+                  </label>
                 </div>
-              ) : !user ? (
-                <div className="rounded-xl bg-slate-50 px-4 py-6 text-center ring-1 ring-slate-100">
-                  <p className="text-sm text-slate-500">Sign in to see favorites.</p>
+
+                <div>
+                  <h1 className="text-3xl font-black text-slate-900">
+                    {profile?.username || "No username set"}
+                  </h1>
+                  <p className="text-sm text-slate-400 mt-1">{user?.email}</p>
+                  <p className="text-xs text-slate-400 mt-3">
+                    Joined {user?.created_at ? new Date(user.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : "—"}
+                  </p>
                 </div>
-              ) : favorites.length === 0 ? (
-                <div className="rounded-xl bg-slate-50 px-4 py-6 text-center ring-1 ring-slate-100">
-                  <p className="text-sm text-slate-500">No favorites yet.</p>
+              </div>
+
+              <Link
+                href="/account"
+                className="inline-flex items-center gap-2 rounded-full bg-[#FFC038] px-4 py-2 text-sm font-semibold text-white hover:bg-[#FFD700] transition"
+              >
+                <FaEdit className="h-4 w-4" />
+                Edit profile
+              </Link>
+            </div>
+
+            <div className="mt-8 rounded-2xl border border-slate-200 bg-slate-50 p-6">
+              <div className="flex items-center justify-between gap-4">
+                <h2 className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">About</h2>
+                <button
+                  type="button"
+                  onClick={handleBioEdit}
+                  className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-[#FFC038] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#FFD700]"
+                >
+                  <FaEdit className="h-3.5 w-3.5" />
+                  Edit bio
+                </button>
+              </div>
+
+              {!isEditingBio ? (
+                <div className="mt-4 text-sm text-slate-600 leading-relaxed">
+                  {profile?.bio || (
+                    <span className="text-slate-400 italic">
+                      No bio yet. Add a short description about yourself so people know more about your playing style and preferences.
+                    </span>
+                  )}
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {favorites.map((fav) => (
-                    <Link
-                      key={fav.racket_id}
-                      href={`/rackets/${fav.racket_id}`}
-                      className="flex items-center gap-3 rounded-xl bg-slate-50 px-4 py-3 ring-1 ring-slate-100 hover:ring-blue-400 hover:bg-blue-50 transition"
-                    >
-                      <img
-                        src={fav.racket?.img_url || "/placeholder-racket.png"}
-                        alt={fav.racket?.name}
-                        className="h-12 w-12 object-contain shrink-0"
-                      />
-                      <span className="text-sm font-semibold text-slate-800">
-                        {truncate(fav.racket?.name || "", 3)}
-                      </span>
-                    </Link>
-                  ))}
-                </div>
+                <>
+                  <textarea
+                    id="bio"
+                    value={bioDraft}
+                    onChange={(e) => setBioDraft(e.target.value)}
+                    rows={5}
+                    className="mt-4 w-full rounded-3xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
+                    placeholder="Write a short bio about yourself..."
+                  />
+
+                  <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
+                    <p className="text-xs text-slate-500">{bioDraft.length} / 240 characters</p>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={handleBioSave}
+                        disabled={isSavingBio || bioDraft === profile?.bio}
+                        className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+                      >
+                        {isSavingBio ? "Saving..." : "Save bio"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleBioCancel}
+                        disabled={isSavingBio}
+                        className="rounded-full cursor-pointer border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </>
               )}
-            </SectionCard>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-2xl bg-white/90 shadow-xl ring-1 ring-white/40 backdrop-blur-md overflow-hidden">
+          <div className="border-b border-slate-100 px-6 py-4">
+            <div className="flex flex-wrap gap-3">
+              {tabs.map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`rounded-full px-4 py-2 text-sm font-semibold transition cursor-pointer ${
+                    activeTab === tab
+                      ? "bg-[#FFC038] text-white"
+                      : "bg-slate-100 text-slate-600 hover:bg-blue-200"
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* Right Column */}
-          <div className="lg:col-span-2 space-y-6">
-            <SectionCard
-              title="Player Assessment"
-              subtitle="Assessment results will display here."
-            >
-              <div className="rounded-xl bg-slate-50 px-4 py-6 text-center ring-1 ring-slate-100">
-                <p className="text-sm text-slate-500">Assessment data not available.</p>
+          <div className="px-6 py-8">
+            {activeTab === "Marketplace" && (
+              <div>
+                <h2 className="text-xl font-bold text-slate-900">Marketplace</h2>
+                <p className="mt-2 text-sm text-slate-500">Browse rackets, view offers, and manage your marketplace activity.</p>
+                <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-6 text-sm text-slate-600">
+                  Marketplace content goes here.
+                </div>
               </div>
-            </SectionCard>
+            )}
 
-            <SectionCard
-              title="Recommendations"
-              subtitle="Personalized racket recommendations will appear here."
-            >
-              <div className="rounded-xl bg-slate-50 px-4 py-6 text-center ring-1 ring-slate-100">
-                <p className="text-sm text-slate-500">No recommendations yet.</p>
+            {activeTab === "Posts" && (
+              <div>
+                <h2 className="text-xl font-bold text-slate-900">Posts</h2>
+                <p className="mt-2 text-sm text-slate-500">Review your recent posts and community activity.</p>
+                <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-6 text-sm text-slate-600">
+                  Posts content goes here.
+                </div>
               </div>
-            </SectionCard>
+            )}
+
+            {activeTab === "Favorites" && (
+              <div>
+                <h2 className="text-xl font-bold text-slate-900">Favorites</h2>
+                <p className="mt-2 text-sm text-slate-500">See your saved rackets and preferences.</p>
+                <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-6 text-sm text-slate-600">
+                  Favorites content goes here.
+                </div>
+              </div>
+            )}
+
+            {activeTab === "Activity" && (
+              <div>
+                <h2 className="text-xl font-bold text-slate-900">Activity</h2>
+                <p className="mt-2 text-sm text-slate-500">Track your latest activity, reviews, and account changes.</p>
+                <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-6 text-sm text-slate-600">
+                  Activity content goes here.
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

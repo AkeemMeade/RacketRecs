@@ -16,22 +16,11 @@ interface Answer{
   playloc?: string;
   movement?: string;
   strength?: string;
-  event?: string;
-  playstyle?: string;
-  playloc?: string;
-  movement?: string;
-  strength?: string;
   injury?: string;
   feel?: string;
   budget?: string;
   brand?: string;
 }
-
-  feel?: string;
-  budget?: string;
-  brand?: string;
-}
-
 
 const supabase = createClient();
 
@@ -131,10 +120,6 @@ export default function Questionnaire() {
 
   return (
     <div className={`${outfit.className} min-h-screen`}>
-      
-      {/* Background gradient */}
-      <div className="fixed inset-0 bg-gradient-to-b from-blue-400 via-blue-300 to-blue-200 -z-10"/>
-
       <div className="max-w-2xl mx-auto px-4 py-12">
         {/* Header */}
         <div className="mb-8 text-center">

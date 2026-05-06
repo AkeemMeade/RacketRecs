@@ -181,7 +181,7 @@ export default function ComparisonPage() {
   ];
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-blue-400 via-blue-300 to-blue-200">
+    <main>
       <section className="mx-auto max-w-6xl px-6 py-10">
         <div className="mb-10">
           <h1 className="text-4xl font-bold tracking-tight text-white">

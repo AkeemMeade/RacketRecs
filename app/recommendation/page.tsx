@@ -27,7 +27,6 @@ function SectionCard({
 export default function TemplatePage() {
   return (
     <main className={`${outfit.className} min-h-screen`}>
-      <div className="fixed inset-0 bg-gradient-to-b from-blue-400 via-blue-300 to-blue-200 -z-10" />
       <div className="max-w-5xl mx-auto px-4 py-10">
         <h1 className="text-4xl font-black tracking-tight text-white drop-shadow-sm mb-8">
           Recommendations

@@ -16,11 +16,25 @@ const outfit = Outfit({
 const supabase = createClient();
 
 export function Navbar() {
-  const { open } = useNavbar();
+  const { open, isDark } = useNavbar();
   const { user, loading } = useUser();
   const router = useRouter();
   const [visible, setVisible] = useState(true);
   const lastScrollY = useRef(0);
+  const [profile, setProfile] = useState<{ username: string } | null>(null);
+
+  useEffect(() => {
+  if (!user) return;
+  async function fetchProfile() {
+    const { data } = await supabase
+      .from("profiles")
+      .select("username")
+      .eq("id", user!.id)
+      .single();
+    setProfile(data);
+  }
+  fetchProfile();
+}, [user]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -51,7 +65,7 @@ export function Navbar() {
       >
         {/* Nav bar */}
         <nav
-          className={`${outfit.className} flex justify-between items-center px-8 py-4 bg-blue-400/80 backdrop-blur-md`}
+          className={`${outfit.className} flex justify-between items-center px-8 py-4 ${isDark ? "bg-slate-900/80" : "bg-blue-400/80"} backdrop-blur-md`}
         >
           <div className="flex items-center gap-8">
           <Link
@@ -85,7 +99,7 @@ export function Navbar() {
           <div className="flex items-center gap-8">
             {user ? (
               <>
-                <span className="font-semibold text-white">{user.email}</span>
+                <span className="font-semibold text-white">{profile?.username || user.email}</span>
                 <button
                   onClick={handleSignOut}
                   className="px-6 py-2 border-2 border-white text-white rounded-full drop-shadow-sm hover:bg-white hover:text-primary-foreground transition-colors cursor-pointer"
