@@ -84,7 +84,7 @@ export function Navbar() {
 
           <Link
             className="font-extrabold text-sm uppercase drop-shadow-sm tracking-wide"
-            href="/"
+            href="/rackets"
           >
             Browse
           </Link>

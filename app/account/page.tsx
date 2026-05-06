@@ -117,7 +117,6 @@ export default function SettingsPage() {
   const { user } = useUser();
   const router = useRouter();
   const { isDark, setIsDark } = useNavbar();
-  const [darkMode, setDarkMode] = useState(false);
   const [publicProfile, setPublicProfile] = useState(false);
   const [emailNotifications, setEmailNotifications] = useState(true);
 
