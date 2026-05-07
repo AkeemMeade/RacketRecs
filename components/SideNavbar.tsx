@@ -16,6 +16,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { FaCodeCompare } from "react-icons/fa6";
 import { FaWrench } from "react-icons/fa";
+import { FaShield } from "react-icons/fa6";
 
 const Menus = [
   {
@@ -59,7 +60,7 @@ const supabase = createClient();
 
 export function SideNavbar() {
   const { open, setOpen } = useNavbar();
-  const { user, loading } = useUser();
+  const { user, loading, isAdmin } = useUser();
   const router = useRouter();
 
   const handleSignOut = async () => {
@@ -70,6 +71,11 @@ export function SideNavbar() {
   if (loading || !user) {
     return null;
   }
+
+  const bottomMenus = [
+   ...BottomMenus,
+    ...(isAdmin ? [{ title: "Admin Panel", href: "/admin", icon: <FaShield size={22} /> }] : []),
+  ];
 
   const renderMenus = (menu: any, index: number) => (
     <li
@@ -128,7 +134,7 @@ export function SideNavbar() {
 
         {/* Bottom section */}
         <ul className="mb-4">
-          {BottomMenus.map((menu, index) => renderMenus(menu, index))}
+          {bottomMenus.map((menu, index) => renderMenus(menu, index))}
         </ul>
       </div>
 
