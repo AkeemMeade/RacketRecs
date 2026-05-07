@@ -50,13 +50,18 @@ function SettingRow({
   );
 }
 
-function Toggle({ enabled, onChange }: { enabled: boolean; onChange: () => void }) {
+function Toggle({ enabled, onChange, disabled }: { 
+  enabled: boolean; 
+  onChange: () => void;
+  disabled?: boolean;
+}) {
   return (
     <button
       onClick={onChange}
+      disabled={disabled}
       className={`relative w-11 h-6 rounded-full transition-colors duration-200 cursor-pointer ${
-        enabled ? "bg-[#FFC038]" : "bg-slate-200"
-      }`}
+        disabled ? "opacity-40 cursor-not-allowed" : ""
+      } ${enabled ? "bg-[#FFC038]" : "bg-slate-200"}`}
     >
       <span
         className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${
@@ -135,13 +140,14 @@ export default function SettingsPage() {
     async function fetchProfile() {
       const { data } = await supabase
         .from("profiles")
-        .select("username")
+        .select("username, is_public")
         .eq("id", user!.id)
         .single();
       if (data?.username) {
         setUsername(data.username);
         setNameInput(data.username);
       }
+      if (data?.is_public) setPublicProfile(data.is_public);
     }
     fetchProfile();
   }, [user]);
@@ -161,6 +167,16 @@ export default function SettingsPage() {
       setEditingName(false);
     }
   };
+
+  const handlePublicToggle = async () => {
+  if (!username || !user) return;
+  const newVal = !publicProfile;
+  setPublicProfile(newVal);
+  await supabase
+    .from("profiles")
+    .update({ is_public: newVal })
+    .eq("id", user.id);
+};
 
   const handleDeleteAccount = async () => {
     if (!user) return;
@@ -246,7 +262,16 @@ export default function SettingsPage() {
             </SettingRow>
 
             <SettingRow label="Public Profile" description="Allow others to view your profile">
-              <Toggle enabled={publicProfile} onChange={() => setPublicProfile(!publicProfile)} />
+              <div className="flex items-center gap-2">
+                {!username && (
+                  <span className="text-xs text-amber-500 font-medium">Set a username first</span>
+                )}
+                <Toggle
+                  enabled={publicProfile}
+                  disabled={!username}
+                  onChange={handlePublicToggle}
+                />
+              </div>
             </SettingRow>
 
             <SettingRow label="Email Notifications" description="Receive updates and recommendations">

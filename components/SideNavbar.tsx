@@ -42,7 +42,7 @@ const Menus = [
   { title: "Comparison Tool", href: "/comparison", icon: <FaCodeCompare size={22} /> },
 
   // maintenence tracker
-  { title: "Maintenence Tracker", href: "/maintenance tracker", icon: <FaWrench size={22} /> },
+  { title: "Maintenence Tracker", href: "/maintenance", icon: <FaWrench size={22} /> },
 ];
 
 const BottomMenus = [

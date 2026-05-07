@@ -61,7 +61,7 @@ export default function FavoritesPage() {
   return (
     <main className={`${outfit.className} min-h-screen`}>
       <div className="max-w-5xl mx-auto px-4 py-10">
-        <h1 className="text-4xl font-black tracking-tight text-white drop-shadow-sm mb-8">
+        <h1 className={`text-4xl font-bold tracking-tight text-white drop-shadow-md ${outfit.className} mb-8`}>
           Your Favorites
         </h1>
 

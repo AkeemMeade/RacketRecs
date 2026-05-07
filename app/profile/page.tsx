@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { CiCirclePlus } from "react-icons/ci";
 import { FaEdit } from "react-icons/fa";
+import { PostsTab } from "@/components/postsTab";
 
 
 const outfit = Outfit({ subsets: ["latin"], weight: ["300", "400", "500", "600", "700"] });
@@ -261,13 +262,7 @@ export default function ProfilePage() {
             )}
 
             {activeTab === "Posts" && (
-              <div>
-                <h2 className="text-xl font-bold text-slate-900">Posts</h2>
-                <p className="mt-2 text-sm text-slate-500">Review your recent posts and community activity.</p>
-                <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-6 text-sm text-slate-600">
-                  Posts content goes here.
-                </div>
-              </div>
+              <PostsTab userId={user!.id} isOwner={true} username={profile?.username ?? ""} />
             )}
 
             {activeTab === "Favorites" && (
