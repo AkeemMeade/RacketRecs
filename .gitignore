@@ -42,3 +42,6 @@ next-env.d.ts
 
 # scraper summary files
 scripts/gathering/*.json
+venv/pyvenv.cfg
+/app/recommendation/__pycache__
+/venv
