@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, Box, Typography } from '@mui/material';
 
 const supabase = createClient();
