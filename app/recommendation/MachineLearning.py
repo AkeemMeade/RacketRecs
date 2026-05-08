@@ -587,4 +587,3 @@ def get_rec(user_ans):
     rec = racket_df.iloc[indices[0]][['name', 'price', 'img_url', 'color']].to_dict(orient='records')
     return rec
 
-
