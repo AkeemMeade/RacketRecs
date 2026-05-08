@@ -7,6 +7,7 @@ import { SideNavbar } from "@/components/SideNavbar";
 import { UserProvider } from "@/lib/UserContext";
 import { ChatWidget } from "@/components/ChatWidget";
 
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -29,7 +30,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
+      <body 
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <NavbarProvider>
