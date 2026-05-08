@@ -558,7 +558,7 @@ knn.fit(scaled_x)
 #creates user vector from user answers
 def user_vector(user_ans):
 
-    vec = np.array([baseline.get(str(col), 0) for col in cols], dtype=float)
+    vec = np.array([baseline.get(col, 0) for col in cols], dtype=float)
     col_index = {k: i for i, k in enumerate(cols)}
 
     for question, answer in user_ans.items():

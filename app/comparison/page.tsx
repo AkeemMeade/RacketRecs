@@ -1,6 +1,21 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { Outfit } from "next/font/google";
+
+const outfit = Outfit({
+  subsets: ["latin"],
+});
+
+type Manufacturer = {
+  manufacturer_id?: number | string;
+  name?: string | null;
+};
+
+type ManufacturerRow = {
+  manufacturer_id: number;
+  name: string | null;
+};
 
 type RetailerPrice = {
   price: number | string | null;
@@ -14,16 +29,7 @@ type ApiRacket = {
   weight: string | null;
   img_url: string | null;
   manufacturer_id: number | null;
-  manufacturer?:
-    | {
-        manufacturer_id?: number | null;
-        name?: string | null;
-      }
-    | {
-        manufacturer_id?: number | null;
-        name?: string | null;
-      }[]
-    | null;
+  manufacturer?: Manufacturer | Manufacturer[] | null;
   racket_retailer?: RetailerPrice[] | null;
 };
 
@@ -104,47 +110,82 @@ export default function ComparisonPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    const fetchRackets = async () => {
-      try {
-        setLoading(true);
-        setError("");
+useEffect(() => {
+  const fetchRackets = async () => {
+    try {
+      setLoading(true);
+      setError("");
 
-        const response = await fetch("/api/rackets");
+      const [racketsResponse, manufacturersResponse] = await Promise.all([
+        fetch("/api/rackets"),
+        fetch("/api/manufacturers"),
+      ]);
 
-        if (!response.ok) {
-          throw new Error(`Failed to fetch rackets: ${response.status}`);
-        }
-
-        const data: ApiRacket[] = await response.json();
-
-        const normalized: ComparisonRacket[] = (data ?? []).map((racket) => {
-          const manufacturerData = Array.isArray(racket.manufacturer)
-            ? racket.manufacturer[0]
-            : racket.manufacturer;
-
-          return {
-            id: racket.racket_id,
-            name: racket.name ?? "Unnamed Racket",
-            brand: manufacturerData?.name ?? "Unknown",
-            weight: racket.weight ?? "N/A",
-            balance: racket.balance ?? "N/A",
-            stiffness: racket.stiffness ?? "N/A",
-            skillLevel: "N/A",
-            priceRange: getPriceRange(racket.racket_retailer),
-          };
-        });
-
-        setAllRackets(normalized);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Something went wrong.");
-      } finally {
-        setLoading(false);
+      if (!racketsResponse.ok) {
+        throw new Error(`Failed to fetch rackets: ${racketsResponse.status}`);
       }
-    };
 
-    fetchRackets();
-  }, []);
+      if (!manufacturersResponse.ok) {
+        throw new Error(
+          `Failed to fetch manufacturers: ${manufacturersResponse.status}`
+        );
+      }
+
+      const racketData: ApiRacket[] = await racketsResponse.json();
+      const manufacturerData: ManufacturerRow[] =
+        await manufacturersResponse.json();
+
+      const manufacturerMap = new Map<string, string>();
+
+      for (const manufacturer of manufacturerData ?? []) {
+        const id = manufacturer?.manufacturer_id;
+        const name = manufacturer?.name?.trim();
+
+        if (id !== null && id !== undefined && name) {
+          manufacturerMap.set(String(id), name);
+        }
+      }
+      
+      console.log("racketData", racketData);
+      console.log("manufacturerData", manufacturerData);
+
+      const normalized: ComparisonRacket[] = (racketData ?? []).map((racket) => {
+        const joinedManufacturer = Array.isArray(racket.manufacturer)
+          ? racket.manufacturer[0]
+          : racket.manufacturer;
+
+        const manufacturerIdKey =
+          racket.manufacturer_id !== null && racket.manufacturer_id !== undefined
+            ? String(racket.manufacturer_id)
+            : null;
+
+        const brandName =
+          joinedManufacturer?.name?.trim() ||
+          (manufacturerIdKey ? manufacturerMap.get(manufacturerIdKey) : null) ||
+          "Unknown";
+
+        return {
+          id: racket.racket_id,
+          name: racket.name ?? "Unnamed Racket",
+          brand: brandName,
+          weight: racket.weight ?? "N/A",
+          balance: racket.balance ?? "N/A",
+          stiffness: racket.stiffness ?? "N/A",
+          skillLevel: "N/A",
+          priceRange: getPriceRange(racket.racket_retailer),
+        };
+      });
+
+      setAllRackets(normalized);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchRackets();
+}, []);
 
   const filteredRackets = useMemo(() => {
     const lower = query.toLowerCase().trim();
@@ -181,8 +222,9 @@ export default function ComparisonPage() {
   ];
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-blue-400 via-blue-300 to-blue-200">
+    <main className={`${outfit.className} min-h-screen`}>
       <section className="mx-auto max-w-6xl px-6 py-10">
+        <div className="fixed inset-0 bg-gradient-to-b from-blue-400 via-blue-300 to-blue-200 -z-10" />
         <div className="mb-10">
           <h1 className="text-4xl font-bold tracking-tight text-white">
             Comparison Tool

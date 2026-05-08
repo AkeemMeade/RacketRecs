@@ -271,20 +271,8 @@ export default function RacketDetails({
 
                   {/* Reviews */}
                   <div className="mb-6">
-                    <h2
-                      className={`${dmSans.className} text-xs font-semibold tracking-widest uppercase text-blue-400 mb-3`}
-                    >
-                    </h2>
-                    {racket.reviews_count > 0 ? (
-                      <ReviewsSection racketId={racket.racket_id} />
-                    ) : (
-                      <div className="rounded-xl bg-slate-50 px-4 py-10 text-center ring-1 ring-slate-100">
-                        <p className="text-slate-500">
-                          No reviews yet. Be the first to review this racket!
-                        </p>
-                        <StarRating racketId={racket.racket_id} />
-                      </div>
-                    )}
+                    <StarRating racketId={racket.racket_id} />
+                    <ReviewsSection racketId={racket.racket_id} />
                   </div>
                 </>
               ) : (
