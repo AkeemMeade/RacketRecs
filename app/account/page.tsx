@@ -76,7 +76,7 @@ function DeleteAccount({ label, onClick }: { label: string; onClick: () => void 
   return (
     <button
       onClick={onClick}
-      className="px-4 py-1.5 rounded-full border-2 border-red-300 text-red-500 text-xs font-semibold hover:bg-red-50 transition"
+      className="px-4 py-1.5 rounded-full border-2 border-red-300 text-red-500 text-xs font-semibold hover:bg-red-50 transition cursor-pointer"
     >
       {label}
     </button>
@@ -123,7 +123,6 @@ export default function SettingsPage() {
   const router = useRouter();
   const { isDark, setIsDark } = useNavbar();
   const [publicProfile, setPublicProfile] = useState(false);
-  const [emailNotifications, setEmailNotifications] = useState(true);
 
   const [username, setUsername] = useState("");
   const [editingName, setEditingName] = useState(false);
@@ -202,7 +201,7 @@ export default function SettingsPage() {
       )}
 
       <div className="max-w-2xl mx-auto px-4 py-10">
-        <h1 className="text-4xl font-black tracking-tight text-white drop-shadow-sm mb-8">
+        <h1 className={`${outfit.className} text-4xl font-black tracking-tight text-white drop-shadow-sm mb-8`}>
           Settings
         </h1>
 
@@ -272,10 +271,6 @@ export default function SettingsPage() {
                   onChange={handlePublicToggle}
                 />
               </div>
-            </SettingRow>
-
-            <SettingRow label="Email Notifications" description="Receive updates and recommendations">
-              <Toggle enabled={emailNotifications} onChange={() => setEmailNotifications(!emailNotifications)} />
             </SettingRow>
           </SectionCard>
 

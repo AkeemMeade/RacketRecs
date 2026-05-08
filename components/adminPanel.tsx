@@ -113,17 +113,17 @@ export default function adminPanel() {
         supabase.from("marketplace_listings").select("id, racket_name, seller_name, contact_email, price, condition, status, brand, location, created_at").order("created_at", { ascending: false }),
       ]);
 
-      const enrichedPosts = (postsData || []).map((post) => ({
-        ...post,
-        username: profilesData?.find((p) => p.id === post.user_id)?.username || "Unknown",
-      }));
+      const enrichedPosts = (postsData || []).map((post) => {
+  const profile = profilesData?.find((p) => p.id === post.user_id);
+  console.log("post user_id:", post.user_id, "found profile:", profile);
+  return {
+    ...post,
+    username: profile?.username || "Unknown",
+  };
+});
 
       setUsers(profilesData || []);
-      setPosts(enrichedPosts);
-      setListings(listingsData || []);
-
-      setUsers(profilesData || []);
-      setPosts(postsData || []);
+      setPosts(enrichedPosts || []);
       setListings(listingsData || []);
       setLoadingData(false);
     }
