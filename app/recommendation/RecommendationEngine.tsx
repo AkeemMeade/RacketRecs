@@ -21,7 +21,7 @@ interface Racket {
   color?: string;
   weight?: string;
   img_url?: string;
-  summary?: string; // added
+  summary?: string;
 }
 
 export default function RecommendationEngine() {
@@ -49,25 +49,33 @@ export default function RecommendationEngine() {
         budget: ans.budget,
       };
 
-      const summaryRes = await fetch('/api/recommend-summary', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(answerF),
-      });
+      // Step 1: Get rackets from Flask
+      try {
+        const res = await fetch('http://localhost:3001/api/recommend', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(answerF),
+        });
 
-      const rackets: Racket[] = await summaryRes.json();
+        if (!res.ok) {
+          console.error('Flask error:', res.status);
+          return;
+        }
 
-      // Generate summary for each racket
-      const racketWithSummaries = await Promise.all(
-        rackets.map(async (racket) => {
-          const summaryRes = await fetch('/api/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              messages: [
-                {
-                  role: 'user',
-                  content: `The user has the following profile:
+        const rackets: Racket[] = await res.json();
+
+        // Step 2: Generate summary for each racket
+        const racketWithSummaries = await Promise.all(
+          rackets.map(async (racket) => {
+            try {
+              const summaryRes = await fetch('/api/recommend-summary', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  messages: [
+                    {
+                      role: 'user',
+                      content: `The user has the following profile:
 - Experience: ${answerF.experience}
 - Playstyle: ${answerF.playstyle}
 - Play location: ${answerF.playloc}
@@ -87,17 +95,24 @@ The recommended racket is:
 - Price: $${racket.price}
 
 In 2-3 sentences, explain why this racket is a good match for this user. Be specific and concise.`,
-                },
-              ],
-            }),
-          });
+                    },
+                  ],
+                }),
+              });
 
-          const summaryData = await summaryRes.json();
-          return { ...racket, summary: summaryData.reply };
-        })
-      );
+              const summaryData = await summaryRes.json();
+              return { ...racket, summary: summaryData.reply };
+            } catch (err) {
+              console.error('Summary error:', err);
+              return { ...racket, summary: '' };
+            }
+          })
+        );
 
-      setChoice(racketWithSummaries);
+        setChoice(racketWithSummaries);
+      } catch (err) {
+        console.error('Recommendation fetch failed:', err);
+      }
     };
 
     getRec();
@@ -127,7 +142,6 @@ In 2-3 sentences, explain why this racket is a good match for this user. Be spec
                   Price: ${racket.price}
                 </Typography>
 
-                {/* Summary */}
                 {racket.summary && (
                   <Typography sx={{ mt: 1, fontSize: '14px', color: '#444', fontStyle: 'italic' }}>
                     {racket.summary}
