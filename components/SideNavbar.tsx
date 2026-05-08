@@ -17,6 +17,7 @@ import { useRouter } from "next/navigation";
 import { FaCodeCompare } from "react-icons/fa6";
 import { FaWrench } from "react-icons/fa";
 import { FaShield } from "react-icons/fa6";
+import { FaMoneyBill } from "react-icons/fa6";
 
 const Menus = [
   {
@@ -44,6 +45,9 @@ const Menus = [
 
   // maintenence tracker
   { title: "Maintenence Tracker", href: "/maintenance", icon: <FaWrench size={22} /> },
+
+  // buy/sell marketplace
+  { title: "Marketplace", href: "/sell_rackets", icon: <FaMoneyBill size={22} /> },
 ];
 
 const BottomMenus = [
@@ -101,7 +105,7 @@ export function SideNavbar() {
   return (
     <div className="flex">
       <div
-        className={`fixed top-0 left-0 bg-white h-screen p-5 pt-8 transition-all duration-300 ${open ? "w-72" : "w-20"} z-70 shadow-2xl`}
+        className={`fixed top-0 left-0 bg-white h-screen p-5 pt-8 transition-all duration-300 ${open ? "w-72" : "w-20"} z-70 shadow-2xl flex flex-col`}
       >
         <div className="flex items-center h-10">
           {/* logo */}

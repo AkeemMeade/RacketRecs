@@ -387,13 +387,13 @@ export default function SellRacketsPage() {
               placeholder="Search by model, brand, condition, or location..."
               className="block w-full rounded-full border border-gray-300 bg-white px-5 py-3 text-sm text-gray-900 placeholder-gray-500 transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
             />
-            <FilterSelect value={conditionFilter} onChange={setConditionFilter} options={["All", ...conditionOptions]} />
+            <FilterSelect value={conditionFilter} onChange={setConditionFilter} options={["All", ...conditionOptions]}  />
             <FilterSelect value={statusFilter} onChange={(value) => setStatusFilter(value as ListingStatus | "All")} options={statusOptions} />
             <FilterSelect value={sortBy} onChange={setSortBy} options={sortOptions} />
             <button
               type="button"
               onClick={fetchListings}
-              className="rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+              className="rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 cursor-pointer"
             >
               Refresh
             </button>
@@ -447,7 +447,7 @@ export default function SellRacketsPage() {
                           type="button"
                           onClick={() => deleteListing(listing)}
                           disabled={deletingListingId === listing.id}
-                          className="rounded-full bg-red-50/95 px-3 py-1 text-xs font-bold text-red-700 shadow-sm transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
+                          className="rounded-full bg-red-50/95 px-3 py-1 text-xs font-bold text-red-700 shadow-sm transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
                         >
                           {deletingListingId === listing.id ? "..." : "Remove"}
                         </button>
@@ -503,7 +503,7 @@ export default function SellRacketsPage() {
                         <button
                           type="button"
                           onClick={() => setSelectedListing(listing)}
-                          className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
+                          className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 cursor-pointer"
                         >
                           View Details
                         </button>
@@ -511,7 +511,7 @@ export default function SellRacketsPage() {
                           <button
                             type="button"
                             onClick={() => toggleSaved(listing.id)}
-                            className="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-200"
+                            className="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-200 cursor-pointer"
                           >
                             {isSaved ? "Saved" : "Save"}
                           </button>
@@ -620,7 +620,7 @@ export default function SellRacketsPage() {
               <button
                 type="button"
                 onClick={() => setSelectedListing(null)}
-                className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700 hover:bg-slate-200"
+                className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700 hover:bg-slate-200 cursor-pointer"
               >
                 Close
               </button>
@@ -686,7 +686,7 @@ export default function SellRacketsPage() {
                   <button
                     type="button"
                     onClick={() => toggleSaved(selectedListing.id)}
-                    className="inline-flex h-11 items-center justify-center rounded-full bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-800"
+                    className="cursor-pointer inline-flex h-11 items-center justify-center rounded-full bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-800"
                   >
                     {savedListingIds.includes(selectedListing.id) ? "Saved" : "Save Listing"}
                   </button>

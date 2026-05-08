@@ -8,6 +8,7 @@ import ClearIcon from "@mui/icons-material/Clear";
 import TuneIcon from "@mui/icons-material/Tune";
 import Checkbox from "@mui/material/Checkbox";
 import { GiShuttlecock } from "react-icons/gi";
+import { createClient } from "@/lib/supabase/client";
 
 const outfit = Outfit({
   subsets: ["latin"],
