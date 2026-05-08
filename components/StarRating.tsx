@@ -144,7 +144,7 @@ export default function StarRating({ racketId }: StarRatingProps) {
 
   return (
     <>
-      <div className="flex flex-col items-center gap-2 mt-4">
+      <div className="flex flex-wrap items-center gap-4 mt-4">
         <div className="flex gap-1">
           {[1, 2, 3, 4, 5].map((star) => (
             <button
@@ -156,7 +156,7 @@ export default function StarRating({ racketId }: StarRatingProps) {
               className="transition-transform hover:scale-110 disabled:opacity-50"
             >
               <svg
-                className="w-8 h-8"
+                className="w-5 h-5 cursor-pointer"
                 fill={star <= displayed ? "#FBBF24" : "#D1D5DB"}
                 viewBox="0 0 24 24"
               >
@@ -166,15 +166,16 @@ export default function StarRating({ racketId }: StarRatingProps) {
           ))}
         </div>
 
-        <p className="text-sm text-gray-500">
-          {average !== null
-            ? `${average.toFixed(1)} / 5 · ${count} review${count !== 1 ? "s" : ""}`
-            : "No ratings yet"}
-        </p>
-
-        {userRating && (
-          <p className="text-xs text-blue-500">You rated this {userRating}/5</p>
-        )}
+        <div className="flex items-center gap-3 text-sm text-gray-500">
+          <span>
+            {average !== null
+              ? `${average.toFixed(1)} / 5 · ${count} review${count !== 1 ? "s" : ""}`
+              : "No ratings yet"}
+          </span>
+          {userRating && (
+            <span className="text-xs text-blue-500">You rated this {userRating}/5</span>
+          )}
+        </div>
       </div>
 
       {/* Modal */}
@@ -192,7 +193,7 @@ export default function StarRating({ racketId }: StarRatingProps) {
                   className="transition-transform hover:scale-110"
                 >
                   <svg
-                    className="w-8 h-8"
+                    className="w-7 h-7"
                     fill={star <= (pendingStar ?? 0) ? "#FBBF24" : "#D1D5DB"}
                     viewBox="0 0 24 24"
                   >

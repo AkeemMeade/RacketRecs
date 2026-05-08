@@ -16,6 +16,8 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { FaCodeCompare } from "react-icons/fa6";
 import { FaWrench } from "react-icons/fa";
+import { FaShield } from "react-icons/fa6";
+import { FaMoneyBill } from "react-icons/fa6";
 
 const Menus = [
   {
@@ -42,7 +44,10 @@ const Menus = [
   { title: "Comparison Tool", href: "/comparison", icon: <FaCodeCompare size={22} /> },
 
   // maintenence tracker
-  { title: "Maintenence Tracker", href: "/maintenance tracker", icon: <FaWrench size={22} /> },
+  { title: "Maintenence Tracker", href: "/maintenance", icon: <FaWrench size={22} /> },
+
+  // buy/sell marketplace
+  { title: "Marketplace", href: "/sell_rackets", icon: <FaMoneyBill size={22} /> },
 ];
 
 const BottomMenus = [
@@ -59,7 +64,7 @@ const supabase = createClient();
 
 export function SideNavbar() {
   const { open, setOpen } = useNavbar();
-  const { user, loading } = useUser();
+  const { user, loading, isAdmin } = useUser();
   const router = useRouter();
 
   const handleSignOut = async () => {
@@ -70,6 +75,11 @@ export function SideNavbar() {
   if (loading || !user) {
     return null;
   }
+
+  const bottomMenus = [
+   ...BottomMenus,
+    ...(isAdmin ? [{ title: "Admin Panel", href: "/admin", icon: <FaShield size={22} /> }] : []),
+  ];
 
   const renderMenus = (menu: any, index: number) => (
     <li
@@ -95,7 +105,7 @@ export function SideNavbar() {
   return (
     <div className="flex">
       <div
-        className={`fixed top-0 left-0 bg-white h-screen p-5 pt-8 transition-all duration-300 ${open ? "w-72" : "w-20"} z-70 shadow-2xl`}
+        className={`fixed top-0 left-0 bg-white h-screen p-5 pt-8 transition-all duration-300 ${open ? "w-72" : "w-20"} z-70 shadow-2xl flex flex-col`}
       >
         <div className="flex items-center h-10">
           {/* logo */}
@@ -128,7 +138,7 @@ export function SideNavbar() {
 
         {/* Bottom section */}
         <ul className="mb-4">
-          {BottomMenus.map((menu, index) => renderMenus(menu, index))}
+          {bottomMenus.map((menu, index) => renderMenus(menu, index))}
         </ul>
       </div>
 

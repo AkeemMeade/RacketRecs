@@ -77,7 +77,7 @@ export function Navbar() {
 
           <Link
             className="font-extrabold text-sm uppercase drop-shadow-sm tracking-wide"
-            href="/"
+            href="/about"
           >
             about
           </Link>
@@ -91,9 +91,9 @@ export function Navbar() {
 
           <Link
             className="font-extrabold text-sm uppercase drop-shadow-sm tracking-wide"
-            href="/"
+            href="/sell_rackets"
           >
-            Market
+            Marketplace
           </Link>
           </div>
           <div className="flex items-center gap-8">
