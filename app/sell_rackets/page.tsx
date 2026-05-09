@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Outfit } from "next/font/google";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/lib/UserContext";
@@ -9,10 +9,6 @@ const outfit = Outfit({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
 });
-
-const subscribeToHydration = () => () => {};
-const getHydratedSnapshot = () => true;
-const getServerHydrationSnapshot = () => false;
 
 type ListingStatus = "Available" | "Pending" | "Sold";
 
@@ -92,11 +88,11 @@ export default function SellRacketsPage() {
   const [editingListing, setEditingListing] = useState<Listing | null>(null);
   const [deletingListingId, setDeletingListingId] = useState<string | null>(null);
   const [form, setForm] = useState<ListingForm>(initialForm);
-  const hasHydrated = useSyncExternalStore(
-    subscribeToHydration,
-    getHydratedSnapshot,
-    getServerHydrationSnapshot
-  );
+  const [hasHydrated, setHasHydrated] = useState(false);
+
+  useEffect(() => {
+    setHasHydrated(true);
+  }, []);
 
   const fetchListings = useCallback(async () => {
     setLoadingListings(true);
