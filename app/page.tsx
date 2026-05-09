@@ -1,5 +1,8 @@
+"use client";
 import Link from "next/link";
 import { Outfit, Roboto } from "next/font/google";
+import { useUser } from "@/lib/UserContext";
+import { useRouter } from "next/navigation";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -11,12 +14,25 @@ const roboto = Roboto({
   weight: ["300", "400", "500", "700"],
 });
 
+function AssessmentButton() {
+  const { user } = useUser();
+  const router = useRouter();
+
+  return (
+    <button
+      onClick={() => router.push(user ? "/assessment" : "/sign-up")}
+      className="px-8 py-4 bg-[#FFC038] text-white tracking-widest font-semibold rounded-full hover:bg-[#e6ac32] transition-colors cursor-pointer"
+    >
+      Player Assessment
+    </button>
+  );
+}
+
 export default function Home() {
 
   return (
     <main className="relative min-h-screen">
-      {/* Background gradient */}
-      <div className="fixed inset-0 bg-gradient-to-b from-blue-400 via-blue-300 to-blue-200 -z-10"/>
+      
 
       <div className="relative z-10">
         {/* Hero section */}
@@ -35,12 +51,7 @@ export default function Home() {
 
         {/* Buttons */}
         <div className="flex justify-center gap-4">
-          <Link
-            href="/assessment"
-            className="px-8 py-4 bg-[#FFC038] text-white tracking-widest font-semibold rounded-full hover:bg-[#e6ac32] transition-colors"
-          >
-            Player Assessment
-          </Link>
+          <AssessmentButton />
           <Link
             href="/rackets"
             className="px-8 py-4 bg-[#FFC038] text-white tracking-widest font-semibold rounded-full hover:bg-[#e6ac32] transition-colors"

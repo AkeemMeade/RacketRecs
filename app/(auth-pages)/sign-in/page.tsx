@@ -57,8 +57,6 @@ export default function LoginPage() {
 
   return (
     <main className="relative min-h-screen overflow-hidden">
-      {/* Background*/}
-      <div className="fixed inset-0 bg-gradient-to-b from-blue-400 via-blue-300 to-blue-200 -z-10" />
 
       {/* ===== AUTH CONTENT ===== */}
       <div className="relative z-10 mx-auto flex min-h-[calc(100vh-140px)] max-w-6xl items-center justify-center p-6">

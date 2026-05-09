@@ -30,7 +30,7 @@ export function ChatWidget() {
 
   return (
     <>
-      {/* Floating button */}
+      {/* Chat bubble */}
       <button
         onClick={() => setIsOpen((o) => !o)}
         className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-[#FFC038] text-white rounded-full shadow-lg flex items-center justify-center hover:bg-[#FFB76B] transition-opacity cursor-pointer"
@@ -38,19 +38,17 @@ export function ChatWidget() {
         {isOpen ? "✕" : <FaRegMessage />}
       </button>
 
-      {/* Chat panel */}
-      {isOpen && (
-        <div className="fixed bottom-24 right-6 z-50 w-80 h-96 bg-white rounded-2xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden">
+      {/* Panel */}
+      <div
+        className={`fixed bottom-24 right-6 z-50 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 
+          flex flex-col overflow-hidden transition-all duration-500 origin-bottom-right z-40 ${
+          isOpen
+            ? "opacity-100 scale-100 pointer-events-auto"
+            : "opacity-0 scale-0 pointer-events-none"
+        }`}
+        style={{ height: "calc(88vh - 6rem)" }}
+      >
 
-          {/* Header */}
-          <div className="px-4 py-3 border-b border-gray-100 flex justify-between items-center">
-            <p className="text-sm font-semibold">RacketRecs Assistant</p>
-            <button onClick={clearChat} className="text-xs text-gray-400 hover:text-gray-600">
-              Clear
-            </button>
-          </div>
-
-          {/* Messages */}
           <div className="flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-3">
             {messages.map((msg, i) => (
               <ChatMessage key={i} message={msg} />
@@ -78,7 +76,7 @@ export function ChatWidget() {
           </div>
 
         </div>
-      )}
+      
     </>
   );
 }

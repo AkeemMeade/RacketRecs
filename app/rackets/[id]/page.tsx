@@ -3,9 +3,10 @@
 import { useState, useEffect, use } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { DM_Serif_Display, DM_Sans } from "next/font/google";
-import FavoriteIcon from "@mui/icons-material/Favorite";
-import FavoriteBorderOutlinedIcon from "@mui/icons-material/FavoriteBorderOutlined";
 import { Outfit } from "next/font/google";
+import ReviewsSection from "@/components/ReviewsSection";
+import StarRating from "@/components/StarRating";
+import { FaHeart, FaRegHeart } from "react-icons/fa";
 
 const dmSerif = DM_Serif_Display({ subsets: ["latin"], weight: "400" });
 const dmSans = DM_Sans({
@@ -171,7 +172,6 @@ export default function RacketDetails({
 
   return (
     <>
-      <div className="fixed inset-0 bg-gradient-to-b from-blue-400 via-blue-300 to-blue-200 -z-10" />
       <div className="container mx-auto py-14 px-4 max-w-5xl">
         <div className="flex flex-col -mt-10">
           <div className="bg-white/85 backdrop-blur-md rounded-3xl border border-white/90 shadow-[0_4px_32px_rgba(56,130,200,0.08)] overflow-hidden flex h-[600px] -mt-10">
@@ -197,18 +197,12 @@ export default function RacketDetails({
                 <button
                   onClick={handleFavorite}
                   disabled={!userId}
-                  className="w-9 h-9 rounded-full border-2 border-[#FFC038] flex items-center justify-center transition-all hover:bg-[#FFC038] group disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                  className="p-2 cursor-pointer rounded-full text-gray-300 transition-colors hover:text-[#FFC038] disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {isFavorited ? (
-                    <FavoriteIcon
-                      sx={{ fontSize: 18, color: "#FFC038" }}
-                      className="group-hover:!text-white"
-                    />
+                    <FaHeart size={30} className="text-[#FFC038]" />
                   ) : (
-                    <FavoriteBorderOutlinedIcon
-                      sx={{ fontSize: 18, color: "#FFC038" }}
-                      className="group-hover:!text-white"
-                    />
+                    <FaRegHeart size={30} />
                   )}
                 </button>
               </div>
@@ -220,40 +214,39 @@ export default function RacketDetails({
               </h1>
               <div className="border-t border-sky-100 mb-6" />
 
-              {!showRetailers ? (
-                <>
+              <div className="-mt-10 mb-2">
+                <StarRating racketId={racket.racket_id} />
+              </div>
+              <div className="h-px bg-sky-200 mb-4" />
+
+              <div className="relative flex-1 flex flex-col">
+                {/* Specs view */}
+                <div
+                  className={`transition-all duration-300 ease-in-out flex flex-col flex-1 ${showRetailers
+                      ? "opacity-0 -translate-x-4 pointer-events-none absolute inset-0"
+                      : "opacity-100 translate-x-0"
+                    }`}
+                >
                   {/* Specs */}
-                  <div className="grid grid-cols-2 gap-x-6 gap-y-5 mb-6">
+                  <div className="mb-3">
+                    <h2 className={`${dmSans.className} text-xs font-semibold tracking-widest uppercase text-sky-600`}>Specs</h2>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-5 mb-4">
                     <SpecItem label="Balance" value={racket.balance} />
                     <SpecItem label="Weight" value={`3U · ${racket.weight}`} />
                     <SpecItem label="Stiffness" value={racket.stiffness} />
                     <div className="flex flex-col gap-1">
-                      <span
-                        className={`${dmSans.className} text-xs font-semibold tracking-widest uppercase text-blue-400`}
-                      >
-                        Colors
-                      </span>
-                      <span
-                        className={`${dmSans.className} text-sm font-medium text-black`}
-                      >
-                        {racket.color}
-                      </span>
+                      <span className={`${dmSans.className} text-xs font-semibold tracking-widest uppercase text-blue-400`}>Colors</span>
+                      <span className={`${dmSans.className} text-sm font-medium text-black`}>{racket.color}</span>
                     </div>
                   </div>
-
-                  <div className="border-t border-sky-100 mb-6" />
-
-                  {/* Price */}
+                  <div className="border-t border-sky-100 mb-4" />
                   <div className="flex items-end justify-between mt-auto">
                     <div>
-                      <span
-                        className={`${dmSans.className} text-xs font-semibold tracking-widest uppercase text-blue-400`}
-                      >
+                      <span className={`${dmSans.className} text-xs font-semibold tracking-widest uppercase text-blue-400`}>
                         {lowestPrice ? "Starting at" : "Retail Price"}
                       </span>
-                      <p
-                        className={`${outfit.className} text-4xl text-black leading-tight`}
-                      >
+                      <p className={`${outfit.className} text-4xl text-black leading-tight`}>
                         {lowestPrice ? `$${lowestPrice}` : `$${racket.price}`}
                       </p>
                     </div>
@@ -264,49 +257,18 @@ export default function RacketDetails({
                       View Retailers →
                     </button>
                   </div>
+                </div>
 
-                  <div className="border-t border-sky-100 mb-6 mt-6" />
-
-                  {/* Reviews */}
-                  <div className="mb-6">
-                    <h2
-                      className={`${dmSans.className} text-xs font-semibold tracking-widest uppercase text-blue-400 mb-3`}
-                    >
-                      Reviews
-                    </h2>
-                    <div className="flex flex-col gap-3">
-                      <div className="bg-sky-50 border border-sky-100 rounded-2xl px-4 py-3">
-                        <div className="flex items-center justify-between mb-1">
-                          <span
-                            className={`${outfit.className} text-sm font-semibold text-black`}
-                          >
-                            Username
-                          </span>
-                          <div className="flex gap-0.5">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <span
-                                key={star}
-                                className="text-[#FFC038] text-sm"
-                              >
-                                ★
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                        <p className={`${outfit.className} text-sm text-black`}>
-                          Review text goes here.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <>
+                {/* Retailers view */}
+                <div
+                  className={`transition-all duration-300 ease-in-out flex flex-col ${showRetailers
+                      ? "opacity-100 translate-x-0"
+                      : "opacity-0 translate-x-4 pointer-events-none h-0 overflow-hidden"
+                    }`}
+                >
                   {retailers.length === 0 ? (
                     <div className="mt-4">
-                      <p
-                        className={`${dmSans.className} text-gray-500 text-base mb-4`}
-                      >
+                      <p className={`${dmSans.className} text-gray-500 text-base mb-4`}>
                         No retailers currently stock this racket.
                       </p>
                     </div>
@@ -324,60 +286,55 @@ export default function RacketDetails({
                             <div className="w-12 h-12 flex items-center justify-center bg-gray-50 rounded-lg overflow-hidden">
                               <img
                                 src={getRetailerLogo(retailer.retailer_name)}
-                                alt={getRetailerDisplayName(
-                                  retailer.retailer_name,
-                                )}
+                                alt={getRetailerDisplayName(retailer.retailer_name)}
                                 className="w-full h-full object-contain"
                                 onError={(e) => {
-                                  (e.target as HTMLImageElement).style.display =
-                                    "none";
-                                  (
-                                    e.target as HTMLImageElement
-                                  ).parentElement!.innerHTML =
+                                  (e.target as HTMLImageElement).style.display = "none";
+                                  (e.target as HTMLImageElement).parentElement!.innerHTML =
                                     `<span class="text-lg font-bold text-gray-600">${getRetailerDisplayName(retailer.retailer_name)[0]}</span>`;
                                 }}
                               />
                             </div>
                             <div>
-                              <p
-                                className={`${dmSans.className} text-sm font-semibold text-gray-900`}
-                              >
+                              <p className={`${dmSans.className} text-sm font-semibold text-gray-900`}>
                                 {getRetailerDisplayName(retailer.retailer_name)}
                               </p>
-                              <p
-                                className={`${dmSans.className} text-xs text-gray-400`}
-                              >
-                                {retailer.website}
-                              </p>
+                              <p className={`${dmSans.className} text-xs text-gray-400`}>{retailer.website}</p>
                             </div>
                           </div>
                           <div className="text-right">
-                            <p
-                              className={`${outfit.className} text-xl font-bold text-gray-900`}
-                            >
+                            <p className={`${outfit.className} text-xl font-bold text-gray-900`}>
                               ${retailer.price.toFixed(2)}
                             </p>
-                            <p
-                              className={`${dmSans.className} text-xs text-blue-400`}
-                            >
-                              View at store →
-                            </p>
+                            <p className={`${dmSans.className} text-xs text-blue-400`}>View at store →</p>
                           </div>
                         </a>
                       ))}
                     </div>
                   )}
+                  <div className="mt-50 pt-4">
+                    <button
+                      onClick={() => setShowRetailers(false)}
+                      className={`${dmSans.className} mt-4 px-6 py-2.5 bg-sky-50 text-sky-600 text-sm font-semibold rounded-full hover:bg-sky-100 transition-all w-max hover:cursor-pointer`}
+                    >
+                      ← Back to Specs
+                    </button>
+                  </div>
+                  
 
-                  <button
-                    onClick={() => setShowRetailers(false)}
-                    className={`${dmSans.className} mt-4 px-6 py-2.5 bg-sky-50 text-sky-600 text-sm font-semibold rounded-full hover:bg-sky-100 transition-all w-max hover:cursor-pointer`}
-                  >
-                    ← Back to Specs
-                  </button>
-                </>
-              )}
+                </div>
+              </div>
             </div>
           </div>
+        </div>
+
+        <div className="mt-10 mb-8">
+          <div className="h-px bg-sky-200" />
+        </div>
+
+        {/* Reviews */}
+        <div className="mb-6">
+          <ReviewsSection racketId={racket.racket_id} />
         </div>
       </div>
     </>

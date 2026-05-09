@@ -16,6 +16,8 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
 
+const supabase = createClient();
+
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -46,8 +48,6 @@ export default function ForgotPasswordPage() {
 
   return (
     <main className="relative min-h-screen overflow-hidden">
-      {/* Background*/}
-      <div className="fixed inset-0 bg-gradient-to-b from-blue-400 via-blue-300 to-blue-200 -z-10" />
 
       {/* Content */}
       <div className="relative z-10 mx-auto flex min-h-screen max-w-6xl items-center justify-center px-6 py-16">

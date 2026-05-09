@@ -1,16 +1,23 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Outfit } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { NavbarProvider } from "@/components/ui/navbar-context";
 import { SideNavbar } from "@/components/SideNavbar";
 import { UserProvider } from "@/lib/UserContext";
 import { ChatWidget } from "@/components/ChatWidget";
+import { AppBackground } from "@/components/AppBackground";
 
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+});
+
+const outfit = Outfit({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
 });
 
 const geistMono = Geist_Mono({
@@ -31,12 +38,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body 
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${outfit.className} antialiased`}
       >
         <NavbarProvider>
           <UserProvider>
+            <AppBackground />
           <SideNavbar />
           <Navbar />
+          
           <main className="pt-16">
             {children}
           </main>

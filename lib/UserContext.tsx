@@ -8,6 +8,7 @@ interface UserContextType {
   user: User | null;
   loading: boolean;
   error: string | null;
+  isAdmin: boolean;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -18,6 +19,16 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  const fetchAdmin = async (userId: string) => {
+    const { data } = await supabase
+      .from("users")
+      .select("is_admin")
+      .eq("user_id", userId)
+      .single();
+    setIsAdmin(data?.is_admin === true);
+  };
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -29,6 +40,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         } else {
           setUser(data.user);
           setError(null);
+          if (data.user) await fetchAdmin(data.user.id);
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Unknown error");
@@ -44,6 +56,11 @@ export function UserProvider({ children }: { children: ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       setLoading(false);
+      if (session?.user) {
+        fetchAdmin(session.user.id);
+      } else {
+        setIsAdmin(false);
+      }
     });
 
     return () => {
@@ -52,7 +69,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <UserContext.Provider value={{ user, loading, error }}>
+    <UserContext.Provider value={{ user, loading, error, isAdmin }}>
       {children}
     </UserContext.Provider>
   );

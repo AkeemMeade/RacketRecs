@@ -645,10 +645,9 @@ export default function MaintenanceTrackerPage() {
   return (
     <main className={`${outfit.className} min-h-screen`}>
       <section className="mx-auto max-w-6xl px-6 py-10">
-        <div className="fixed inset-0 -z-10 bg-gradient-to-b from-blue-400 via-blue-300 to-blue-200" />
 
         <div className="mb-10">
-          <h1 className="text-4xl font-bold tracking-tight text-white">
+          <h1 className={`text-4xl font-bold tracking-tight text-white drop-shadow-md ${outfit.className} mb-3`}>
             Maintenance Tracker
           </h1>
           <p className="mt-3 max-w-2xl text-sm text-white/90">

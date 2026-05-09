@@ -1,3 +1,4 @@
+// deprecated
 "use client";
 
 import Link from "next/link";
@@ -126,8 +127,6 @@ export default function PreferencesPage() {
 
   return (
     <main className="relative min-h-screen overflow-hidden">
-      {/* Background (same theme as auth) */}
-      <div className="fixed inset-0 bg-gradient-to-b from-blue-400 via-blue-300 to-blue-200 -z-10" />
 
       <div className="relative z-10 mx-auto max-w-6xl p-6">
         {/* Header */}
