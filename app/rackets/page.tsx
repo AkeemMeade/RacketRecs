@@ -213,28 +213,11 @@ export default function RacketsPage() {
 
             </div>
           </div>
-          <button
-            onClick={() => {
-              if (view === "rackets") {
-                setView("strings");
-
-                if (strings.length === 0) fetchStrings();
-              } else {
-                setView("rackets");
-              }
-            }}
-            className={`${outfit.className} 
-            text-black bg-[#FFC038] 
-            rounded-full p-3 w-auto 
-            hover:opacity-90 
-            hover:cursor-pointer 
-            hover:outline mb-10`}>
-            Browse Strings
-          </button>
+          
           {/* Search bar */}
-          <div className="mb-8 flex gap-5">
+          <div className="mb-8 flex gap-5 -mt-10">
             <div className="relative flex-1">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none mb-9">
                 <SearchIcon className="h-5 w-5 text-gray-400" />
               </div>
               <input
@@ -262,6 +245,26 @@ export default function RacketsPage() {
             )}
             {/* end of Search bar */}
 
+            {/* Change View  */}
+            <button
+            onClick={() => {
+              if (view === "rackets") {
+                setView("strings");
+
+                if (strings.length === 0) fetchStrings();
+              } else {
+                setView("rackets");
+              }
+            }}
+            className={`${outfit.className} 
+            text-black bg-[#FFC038] 
+            rounded-full p-3 w-auto 
+            hover:opacity-90 
+            hover:cursor-pointer 
+            hover:outline mb-10 text-white shadow-20`}>
+            {view === "rackets" ? "Browse Strings" : "Browse Rackets"}
+          </button>
+
 
             {/* Filter button */}
             <div className={`relative ${outfit.className}`}>
@@ -269,7 +272,7 @@ export default function RacketsPage() {
                 onClick={() => setShowFilters(!showFilters)}
                 className={` 
             ${outfit.className} 
-            text-black bg-[#FFC038] 
+            text-white bg-[#FFC038] 
             rounded-full p-3 w-20 
             hover:opacity-90 
             hover:cursor-pointer 
@@ -415,8 +418,8 @@ export default function RacketsPage() {
                   }
                   disabled={currentPage === 1}
                   className={`px-4 py-2 rounded-full ${currentPage === 1
-                      ? "bg-gray-300 cursor-not-allowed"
-                      : "bg-[#FFC038] text-black hover:bg-[#FFB800] hover:cursor-pointer"
+                    ? "bg-gray-300 cursor-not-allowed"
+                    : "bg-[#FFC038] text-black hover:bg-[#FFB800] hover:cursor-pointer"
                     }`}
                 >
                   ← Previous
@@ -435,8 +438,8 @@ export default function RacketsPage() {
                   }
                   disabled={currentPage === totalPages}
                   className={`px-4 py-2 rounded-full ${currentPage === totalPages
-                      ? "bg-gray-300 cursor-not-allowed"
-                      : "bg-[#FFC038] text-black hover:bg-[#FFB800] hover:cursor-pointer"
+                    ? "bg-gray-300 cursor-not-allowed"
+                    : "bg-[#FFC038] text-black hover:bg-[#FFB800] hover:cursor-pointer"
                     }`}
                 >
                   Next →
