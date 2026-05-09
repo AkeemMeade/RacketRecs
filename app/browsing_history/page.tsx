@@ -47,10 +47,8 @@ interface BrowsingHistoryItem {
     name: string | null;
     img_url: string | null;
     manufacturer_id: number | null;
-    manufacturer: {
-      name: string | null;
-    } | null;
-  } | null;
+    manufacturer: { name: string | null }[] | null;
+  }[] | null;
 }
 
 export default function BrowsingHistoryPage() {
@@ -290,19 +288,19 @@ if (!mounted) {
                     >
                       <img
                         src={
-                          item.racket?.img_url || "/placeholder-racket.png"
+                          item.racket?.[0]?.img_url || "/placeholder-racket.png"
                         }
-                        alt={item.racket?.name || "Racket image"}
+                        alt={item.racket?.[0]?.name || "Racket image"}
                         className="h-16 w-16 shrink-0 rounded-lg bg-white object-contain p-2 ring-1 ring-slate-100"
                       />
 
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-bold text-slate-900">
-                          {formatName(item.racket?.name)}
+                          {formatName(item.racket?.[0]?.name ?? null)}
                         </p>
 
                         <p className="mt-1 text-xs text-slate-500">
-                          {item.racket?.manufacturer?.name || "Unknown Manufacturer"}
+                          {item.racket?.[0]?.manufacturer?.[0]?.name || "Unknown Manufacturer"}
                         </p>
 
                         <p className="mt-1 text-xs text-slate-500">

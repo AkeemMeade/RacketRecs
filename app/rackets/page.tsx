@@ -27,8 +27,23 @@ interface Racket {
   img_url?: string;
 }
 
+interface String {
+  string_id: string;
+  name: string;
+  manufacturer_id: number;
+  manufacturer: {
+    name: string;
+  };
+  gauge: number;
+  feel: string;
+  img_url?: string;
+}
+
 export default function RacketsPage() {
   const supabase = useMemo(() => createClient(), []);
+  const [view, setView] = useState<"rackets" | "strings">("rackets");
+  const [strings, setStrings] = useState<String[]>([]);
+  const [filteredStrings, setFilteredStrings] = useState<String[]>([]);
   const [rackets, setRackets] = useState<Racket[]>([]);
   const [filteredRackets, setFilteredRackets] = useState<Racket[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -120,34 +135,54 @@ export default function RacketsPage() {
     }
   };
 
-  const addToBrowsingHistory = async (racketId: string | number) => {
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError || !user) {
-    console.log("User not logged in. Browsing history not saved.");
-    return;
-  }
-
-  const { error } = await supabase
-    .from("browsing_history")
-    .upsert(
-      {
-        user_id: user.id,
-        racket_id: Number(racketId),
-        viewed_at: new Date().toISOString(),
-      },
-      {
-        onConflict: "user_id,racket_id",
+  // get strings
+  const fetchStrings = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch("/api/strings");
+      if (!res.ok) {
+        throw new Error(`Failed to fetch: ${res.status}`);
       }
-    );
+      const data = await res.json();
+      setStrings(data || []);
+      setFilteredStrings(data || [])
+      setError("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown error");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  if (error) {
-    console.error("Failed to save browsing history:", error.message);
-  }
-};
+
+  const addToBrowsingHistory = async (racketId: string | number) => {
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      console.log("User not logged in. Browsing history not saved.");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("browsing_history")
+      .upsert(
+        {
+          user_id: user.id,
+          racket_id: Number(racketId),
+          viewed_at: new Date().toISOString(),
+        },
+        {
+          onConflict: "user_id,racket_id",
+        }
+      );
+
+    if (error) {
+      console.error("Failed to save browsing history:", error.message);
+    }
+  };
 
   const handleClearSearch = () => {
     setSearchQuery("");
@@ -169,16 +204,33 @@ export default function RacketsPage() {
       <div className="-mt-15 max-w-[1250px] mx-auto px-4 py-12">
 
         <h1
-              className={`text-4xl font-bold tracking-tight text-white drop-shadow-md ${outfit.className} mb-8`}
-            >
-              Browse Rackets
-          </h1>
+          className={`text-4xl font-bold tracking-tight text-white drop-shadow-md ${outfit.className} mb-8`}>
+          {view === "rackets" ? "Browse Rackets" : "Browse Strings"}
+        </h1>
         <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-12">
           <div className="flex justify-between items-center mb-10">
             <div className="relative">
-              
+
             </div>
           </div>
+          <button
+            onClick={() => {
+              if (view === "rackets") {
+                setView("strings");
+
+                if (strings.length === 0) fetchStrings();
+              } else {
+                setView("rackets");
+              }
+            }}
+            className={`${outfit.className} 
+            text-black bg-[#FFC038] 
+            rounded-full p-3 w-auto 
+            hover:opacity-90 
+            hover:cursor-pointer 
+            hover:outline mb-10`}>
+            Browse Strings
+          </button>
           {/* Search bar */}
           <div className="mb-8 flex gap-5">
             <div className="relative flex-1">
@@ -189,7 +241,7 @@ export default function RacketsPage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by name, balance, manufacturer, or weight..."
+                placeholder="Search by name, balance or manufacturer"
                 className="block w-full pl-12 pr-12 py-3 border border-gray-300 rounded-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 placeholder-gray-500 transition"
               />
               {searchQuery && (
@@ -213,7 +265,7 @@ export default function RacketsPage() {
 
             {/* Filter button */}
             <div className={`relative ${outfit.className}`}>
-            <button
+              <button
                 onClick={() => setShowFilters(!showFilters)}
                 className={` 
             ${outfit.className} 
@@ -237,9 +289,11 @@ export default function RacketsPage() {
                   <div className="flex flex-col text-black ">
                     {["Head Heavy", "Head Light", "Even"].map((balance) => (
                       <label key={balance}>
-                        <Checkbox sx={{'&.Mui-checked': {
-                          color: '#FFC038'
-                        }}}
+                        <Checkbox sx={{
+                          '&.Mui-checked': {
+                            color: '#FFC038'
+                          }
+                        }}
                           checked={selectedBalances.includes(balance)}
                           onChange={() => {
                             if (selectedBalances.includes(balance)) {
@@ -259,15 +313,17 @@ export default function RacketsPage() {
                     ))}
                   </div>
 
-                <h3 className={`font-bold text-black ${outfit.className}`}>Manufacturer</h3>
+                  <h3 className={`font-bold text-black ${outfit.className}`}>Manufacturer</h3>
 
                   <div className="flex flex-col text-black">
                     {["Yonex", "Victor", "Li-Ning", "Hundred", "Ashaway", "Apacs", "Technist", "Gosen", "Jnice", "Mizuno"].map(
                       (manufacturer) => (
                         <label key={manufacturer}>
-                          <Checkbox sx={{'&.Mui-checked': {
-                          color: '#FFC038'
-                        }}}
+                          <Checkbox sx={{
+                            '&.Mui-checked': {
+                              color: '#FFC038'
+                            }
+                          }}
                             checked={selectedManufacturers.includes(
                               manufacturer,
                             )}
@@ -293,41 +349,12 @@ export default function RacketsPage() {
                       ),
                     )}
                   </div>
-
-                <h3 className={`font-bold text-black ${outfit.className}`}>Weight</h3>
-
-                  <div className="flex flex-col text-black">
-                    {["Light", "Medium", "Heavy"].map((weight) => (
-                      <label key={weight}>
-                        <Checkbox sx={{'&.Mui-checked': {
-                          color: '#FFC038'
-                        }}}
-                          checked={selectedWeightRanges.includes(weight)}
-                          onChange={() => {
-                            if (selectedWeightRanges.includes(weight)) {
-                              setSelectedWeightRanges(
-                                selectedWeightRanges.filter(
-                                  (w) => w !== weight,
-                                ),
-                              );
-                            } else {
-                              setSelectedWeightRanges([
-                                ...selectedWeightRanges,
-                                weight,
-                              ]);
-                            }
-                          }}
-                        />
-                        {weight}
-                      </label>
-                    ))}
-                  </div>
                 </div>
               )}
-              </div>
+            </div>
           </div>
           {/*end of filter button */}
-          
+
 
           {/* Loading State */}
           {loading && (
@@ -356,27 +383,24 @@ export default function RacketsPage() {
           )}
 
           {/* Gallery Grid */}
-          {!loading && filteredRackets.length > 0 && (
+          {!loading && (view === "rackets" ? filteredRackets : filteredStrings).length > 0 && (
             <>
               <div className="grid grid-cols-4 gap-8">
-                {currentRackets.map((racket) => (
+                {(view === "rackets" ? currentRackets : filteredStrings.slice(indexOfFirstRacket, indexOfLastRacket)).map((item) => (
                   <Link
-                    key={racket.racket_id}
-                    href={`/rackets/${racket.racket_id}`}
+                    key={view === "rackets" ? (item as Racket).racket_id : (item as String).string_id}
+                    href={view === "rackets" ? `/rackets/${(item as Racket).racket_id}` : `/strings/${(item as String).string_id}`}
                     className="group"
-                    onClick={() => addToBrowsingHistory(racket.racket_id)}
+                    onClick={() => view === "rackets" && addToBrowsingHistory((item as Racket).racket_id)}
                   >
-                    <div
-                      className={`${outfit.className} bg-white rounded-xl p-6 shadow-md hover:shadow-xl transition-all duration-300 border 
-                        border-gray-200 group-hover:border-blue-400 h-72 flex flex-col`}
-                    >
+                    <div className={`${outfit.className} bg-white rounded-xl p-6 shadow-md hover:shadow-xl transition-all duration-300 border border-gray-200 group-hover:border-blue-400 h-72 flex flex-col`}>
                       <img
-                        src={racket.img_url || "/placeholder-racket.png"}
-                        alt={racket.name}
+                        src={item.img_url || "/placeholder-racket.png"}
+                        alt={item.name}
                         className="w-full h-48 object-contain mb-4 group-hover:scale-105 transition-transform duration-300 flex-shrink-0"
                       />
                       <h3 className="tracking-tightest text-center font-semibold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2 mt-auto">
-                        {racket.name}
+                        {item.name}
                       </h3>
                     </div>
                   </Link>
@@ -390,11 +414,10 @@ export default function RacketsPage() {
                     setCurrentPage((prev) => Math.max(prev - 1, 1))
                   }
                   disabled={currentPage === 1}
-                  className={`px-4 py-2 rounded-full ${
-                    currentPage === 1
+                  className={`px-4 py-2 rounded-full ${currentPage === 1
                       ? "bg-gray-300 cursor-not-allowed"
                       : "bg-[#FFC038] text-black hover:bg-[#FFB800] hover:cursor-pointer"
-                  }`}
+                    }`}
                 >
                   ← Previous
                 </button>
@@ -411,11 +434,10 @@ export default function RacketsPage() {
                     setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                   }
                   disabled={currentPage === totalPages}
-                  className={`px-4 py-2 rounded-full ${
-                    currentPage === totalPages
+                  className={`px-4 py-2 rounded-full ${currentPage === totalPages
                       ? "bg-gray-300 cursor-not-allowed"
                       : "bg-[#FFC038] text-black hover:bg-[#FFB800] hover:cursor-pointer"
-                  }`}
+                    }`}
                 >
                   Next →
                 </button>

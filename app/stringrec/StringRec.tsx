@@ -38,7 +38,7 @@ export default function StringRecommendation() {
       const { data: ans } = await supabase
         .from('assessment_response')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', user?.id)
         .order('created_at', { ascending: false })
         .limit(1)
         .single();
@@ -144,7 +144,7 @@ export default function StringRecommendation() {
           ))}
           <button
                 onClick={stringRec}
-                className={"transition-all mt-5 w-200 font-bold bg-[#FFC038] shadow-md duration-200 py-4 text-black rounded-full text-lg hover:opacity-70"}
+                className={"transition-all mt-5 w-200 font-bold bg-[#FFC038] shadow-md duration-200 py-4 text-black rounded-full text-lg hover:opacity-70 cursor-pointer"}
 
                 >See Recommended Rackets
             </button>

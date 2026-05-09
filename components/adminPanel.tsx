@@ -179,7 +179,7 @@ export default function adminPanel() {
 
         <div className="rounded-2xl bg-white/85 shadow-xl ring-1 ring-white/40 backdrop-blur-md overflow-hidden">
 
-          {/* Tabs inside card header */}
+          {/* Tabs */}
           <div className="border-b border-slate-100 px-6 py-4">
             <div className="flex gap-3">
               {tabs.map((tab) => (

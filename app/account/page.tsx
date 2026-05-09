@@ -6,6 +6,7 @@ import { useUser } from "@/lib/UserContext";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useNavbar } from "@/components/ui/navbar-context";
+import Link from "next/link";
 
 const outfit = Outfit({ subsets: ["latin"], weight: ["300", "400", "500", "600", "700"] });
 const supabase = createClient();
@@ -50,8 +51,8 @@ function SettingRow({
   );
 }
 
-function Toggle({ enabled, onChange, disabled }: { 
-  enabled: boolean; 
+function Toggle({ enabled, onChange, disabled }: {
+  enabled: boolean;
   onChange: () => void;
   disabled?: boolean;
 }) {
@@ -59,14 +60,12 @@ function Toggle({ enabled, onChange, disabled }: {
     <button
       onClick={onChange}
       disabled={disabled}
-      className={`relative w-11 h-6 rounded-full transition-colors duration-200 cursor-pointer ${
-        disabled ? "opacity-40 cursor-not-allowed" : ""
-      } ${enabled ? "bg-[#FFC038]" : "bg-slate-200"}`}
+      className={`relative w-11 h-6 rounded-full transition-colors duration-200 cursor-pointer ${disabled ? "opacity-40 cursor-not-allowed" : ""
+        } ${enabled ? "bg-[#FFC038]" : "bg-slate-200"}`}
     >
       <span
-        className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${
-          enabled ? "translate-x-5" : "translate-x-0"
-        }`}
+        className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${enabled ? "translate-x-5" : "translate-x-0"
+          }`}
       />
     </button>
   );
@@ -168,14 +167,14 @@ export default function SettingsPage() {
   };
 
   const handlePublicToggle = async () => {
-  if (!username || !user) return;
-  const newVal = !publicProfile;
-  setPublicProfile(newVal);
-  await supabase
-    .from("profiles")
-    .update({ is_public: newVal })
-    .eq("id", user.id);
-};
+    if (!username || !user) return;
+    const newVal = !publicProfile;
+    setPublicProfile(newVal);
+    await supabase
+      .from("profiles")
+      .update({ is_public: newVal })
+      .eq("id", user.id);
+  };
 
   const handleDeleteAccount = async () => {
     if (!user) return;
@@ -247,10 +246,13 @@ export default function SettingsPage() {
               <span className="text-sm text-slate-400">{user?.email}</span>
             </SettingRow>
 
-            <SettingRow label="Password" description="Last changed never">
-              <button className="text-xs px-3 py-1.5 border border-slate-200 text-slate-500 rounded-full font-semibold hover:bg-slate-50 transition">
+            <SettingRow label="Password">
+              <Link
+                href="/forgot-password"
+                className="text-xs px-3 py-1.5 border border-slate-200 text-slate-500 rounded-full font-semibold hover:bg-slate-50 transition cursor-pointer"
+              >
                 Change
-              </button>
+              </Link>
             </SettingRow>
           </SectionCard>
 

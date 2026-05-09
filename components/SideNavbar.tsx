@@ -126,7 +126,7 @@ export function SideNavbar() {
         </div>
 
           {/* Separator Top */}
-        <div className="w-full h-[1px] bg-gray-300 mt-1" />
+        <div className="w-full h-[1px] bg-gray-300 mt-3" />
 
         {/* Top section */}
         <ul className="-mt-4">
@@ -134,7 +134,7 @@ export function SideNavbar() {
         </ul>
 
         {/* Separator Bottom */}
-        <div className="w-full h-[1px] bg-gray-300 mt-10" />
+        <div className="w-full h-[1px] bg-gray-300 mt-10 mb-4" />
 
         {/* Bottom section */}
         <ul className="mb-4">
