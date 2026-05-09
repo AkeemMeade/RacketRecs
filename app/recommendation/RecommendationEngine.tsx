@@ -38,6 +38,8 @@ export default function RecommendationEngine() {
     router.push('/stringrec')
   
   }
+  const viewRac= async (racket:number) =>{router.push(`/rackets/${racket}`)}
+
 
   useEffect(() => {
     const getRec = async () => {
@@ -147,7 +149,6 @@ In 2-3 sentences, explain why this racket is a good match for this user. Be spec
         <div className="justify-center flex flex-wrap gap-9">
 
           {choice.map((racket, index) => (
-
             <div className="flex flex-col items-center w-96"> 
               
             <Typography variant = "caption" sx={{marginRight:'30px', color: '#000000', fontWeight: '900', fontSize:'30px', marginBottom:'24px', fontFamily: outfit.style.fontFamily}}>
@@ -172,7 +173,7 @@ In 2-3 sentences, explain why this racket is a good match for this user. Be spec
 
                 <Box>
                   <Typography variant = "caption" sx={{color: '#2c97e2', textAlign: 'left', fontWeight: '500', fontSize:'22px', fontFamily: outfit.style.fontFamily}}>
-                  Color: 
+                  Colors: 
                   </Typography>
                   <Typography variant = "caption" sx={{marginLeft:'8px',color: '#000000', textAlign: 'left', fontWeight: '500', fontSize:'22px', fontFamily: dmSans.style.fontFamily}}>
                   
@@ -203,14 +204,20 @@ In 2-3 sentences, explain why this racket is a good match for this user. Be spec
                     style={{ border: '4px solid' }}
                   />
                 </Box>
+                <button
+                    onClick={() => viewRac(racket.racket_id!)}
+                    className="w-full mt-3 bg-[#FFC038] font-semibold py-2 rounded-full text-black text-md hover:opacity-70 ">
+                    View Details
+                </button>
               </Box>
               
             </div>
             </div>
           ))}
+
           <button
                 onClick={stringRec}
-                className={"transition-all mt-5 w-200 font-bold bg-[#FFC038] shadow-md duration-200 py-4 text-black rounded-full text-lg hover:opacity-70"}
+                className={"mt-5 w-200 font-bold bg-[#FFC038] shadow-md py-4 text-black rounded-full text-lg hover:opacity-70"}
 
                 >See Recommended Strings
             </button>

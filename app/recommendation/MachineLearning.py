@@ -584,6 +584,6 @@ def user_vector(user_ans):
 def get_rec(user_ans):
     scaled_user = user_vector(user_ans)
     distances, indices = knn.kneighbors(scaled_user)
-    rec = racket_df.iloc[indices[0]][['name', 'price', 'img_url', 'color']].to_dict(orient='records')
+    rec = racket_df.iloc[indices[0]][['name','racket_id', 'price', 'img_url', 'color']].to_dict(orient='records')
     return rec
 
