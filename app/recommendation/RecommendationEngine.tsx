@@ -1,15 +1,12 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Card, CardContent, Box, Typography } from '@mui/material';
-import { DM_Serif_Display, DM_Sans } from "next/font/google";
-import { Outfit } from "next/font/google";
-import { useRouter } from 'next/navigation';
-const dmSans = DM_Sans({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600"],
-});
-const outfit = Outfit({ subsets: ["latin"], weight: "400" });
+import { Outfit, DM_Sans } from "next/font/google";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+
+const outfit = Outfit({ subsets: ["latin"], weight: ["300", "400", "500", "600", "700"] });
+const dmSans = DM_Sans({ subsets: ["latin"], weight: ["300", "400", "500", "600"] });
 
 const supabase = createClient();
 
@@ -29,28 +26,26 @@ interface Racket {
   summary?: string;
 }
 
+const labels = ["🏆 Top Choice", "🥈 Second Best", "🥉 Third Best"];
+
 export default function RecommendationEngine() {
   const [choice, setChoice] = useState<Racket[]>([]);
-  const labels = ["🏆 Top Choice", "🥈 Second Best", "🥉 Third Best"]
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const router = useRouter();
-
-  const stringRec = async () => {
-    router.push('/stringrec')
-
-  }
-  const viewRac = async (racket: number) => { router.push(`/rackets/${racket}`) }
-
 
   useEffect(() => {
     const getRec = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       const { data: ans } = await supabase
-        .from('assessment_response')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: false })
+        .from("assessment_response")
+        .select("*")
+        .eq("user_id", user?.id)
+        .order("created_at", { ascending: false })
         .limit(1)
         .single();
+
+      if (!ans) { setError(true); setLoading(false); return; }
 
       const answerF = {
         experience: ans.experience,
@@ -67,16 +62,13 @@ export default function RecommendationEngine() {
 
       // Step 1: Get rackets from Flask
       try {
-        const res = await fetch('http://localhost:3001/api/recommend', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const res = await fetch("http://localhost:3001/api/recommend", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(answerF),
         });
 
-        if (!res.ok) {
-          console.error('Flask error:', res.status);
-          return;
-        }
+        if (!res.ok) { setError(true); setLoading(false); return; }
 
         const rackets: Racket[] = await res.json();
 
@@ -84,38 +76,35 @@ export default function RecommendationEngine() {
         const racketWithSummaries = await Promise.all(
           rackets.map(async (racket) => {
             try {
-              const summaryRes = await fetch('/api/recommend-summary', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+              const summaryRes = await fetch("/api/recommend-summary", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                  messages: [
-                    {
-                      role: 'user',
-                      content: `The user has the following profile:
-                      - Experience: ${answerF.experience}
-                      - Playstyle: ${answerF.playstyle}
-                      - Play location: ${answerF.playloc}
-                      - Movement: ${answerF.movement}
-                      - Strength: ${answerF.strength}
-                      - Event: ${answerF.event}
-                      - Injury: ${answerF.injury}
-                      - Feel preference: ${answerF.feel}
-                      - Budget: ${answerF.budget}
+                  messages: [{
+                    role: "user",
+                    content: `The user has the following profile:
+- Experience: ${answerF.experience}
+- Playstyle: ${answerF.playstyle}
+- Play location: ${answerF.playloc}
+- Movement: ${answerF.movement}
+- Strength: ${answerF.strength}
+- Event: ${answerF.event}
+- Injury: ${answerF.injury}
+- Feel preference: ${answerF.feel}
+- Budget: ${answerF.budget}
 
-                      The recommended racket is:
-                      - Name: ${racket.name}
-                      - Balance: ${racket.balance}
-                      - Stiffness: ${racket.stiffness}
-                      - Max Tension: ${racket.max_tension}
-                      - Weight: ${racket.weight}
-                      - Price: $${racket.price}
+The recommended racket is:
+- Name: ${racket.name}
+- Balance: ${racket.balance}
+- Stiffness: ${racket.stiffness}
+- Max Tension: ${racket.max_tension}
+- Weight: ${racket.weight}
+- Price: $${racket.price}
 
-                      In 2-3 sentences, explain why this racket is a good match for this user. Be specific and concise.`,
-                    },
-                  ],
+In 2-3 sentences, explain why this racket is a good match for this user. Be specific and concise.`,
+                  }],
                 }),
               });
-
               const summaryData = await summaryRes.json();
               return { ...racket, summary: summaryData.reply };
             } catch (err) {
@@ -126,8 +115,10 @@ export default function RecommendationEngine() {
         );
 
         setChoice(racketWithSummaries);
+        setLoading(false);
       } catch (err) {
-        console.error('Recommendation fetch failed:', err);
+        console.error("Recommendation fetch failed:", err);
+        setLoading(false);
       }
     };
 
@@ -135,94 +126,127 @@ export default function RecommendationEngine() {
   }, []);
 
   return (
-    <div>
+    <main className={`${outfit.className} min-h-screen`}>
+      <div className="max-w-4xl mx-auto px-4 py-10">
 
-      <div className="-mt-15 max-w-[1250px] mx-auto px-4 py-12" />
+        <h1 className="text-4xl font-black tracking-tight text-white drop-shadow-sm mb-2">
+          Your Recommendations
+        </h1>
+        <p className="text-white/70 text-sm mb-8">
+          Based on your assessment, here are the rackets best suited to your game.
+        </p>
 
-
-
-      <Typography variant="h5" sx={{ textAlign: 'center', fontWeight: '1000', fontSize: '45px', marginBottom: '30px', fontFamily: outfit.style.fontFamily }}>
-        Racket Recommendations
-      </Typography>
-      <div className="bg-white/70 backdrop-blur-sm shadow-xl  rounded-2xl p-22  mx-auto mt-8, max-w-[1400px]">
-
-        <div className="justify-center flex flex-wrap gap-9">
-
-          {choice.map((racket, index) => (
-            <div className="flex flex-col items-center w-96">
-
-              <Typography variant="caption" sx={{ marginRight: '30px', color: '#000000', fontWeight: '900', fontSize: '30px', marginBottom: '24px', fontFamily: outfit.style.fontFamily }}>
-                {labels[index] || ""}
-
-              </Typography>
-
-              <div className="w-full rounded-xl shadow-md bg-white p-4">
-
-                <Box>
-                  <Typography variant="caption" sx={{ color: '#2c97e2', textAlign: 'left', fontWeight: '500', fontSize: '22px', fontFamily: outfit.style.fontFamily }}>
-
-                    Name:
-                  </Typography>
-                  <Typography variant="caption" sx={{ marginLeft: '8px', color: '#000000', textAlign: 'left', fontWeight: '500', fontSize: '22px', fontFamily: dmSans.style.fontFamily }}>
-
-                    {racket.name}
-                  </Typography>
-
-
-                </Box>
-
-                <Box>
-                  <Typography variant="caption" sx={{ color: '#2c97e2', textAlign: 'left', fontWeight: '500', fontSize: '22px', fontFamily: outfit.style.fontFamily }}>
-                    Colors:
-                  </Typography>
-                  <Typography variant="caption" sx={{ marginLeft: '8px', color: '#000000', textAlign: 'left', fontWeight: '500', fontSize: '22px', fontFamily: dmSans.style.fontFamily }}>
-
-                    {racket.color}
-                  </Typography>
-                </Box>
-
-                <Box>
-                  <Typography variant="caption" sx={{ color: '#2c97e2', textAlign: 'left', fontWeight: '500', fontSize: '22px', fontFamily: outfit.style.fontFamily }}>
-                    Price:
-                  </Typography>
-
-                  <Typography variant="caption" sx={{ marginLeft: '8px', color: '#000000', textAlign: 'left', fontWeight: '500', fontSize: '22px', fontFamily: dmSans.style.fontFamily }}>
-
-                    ${racket.price}
-                  </Typography>
-
-                  {racket.summary && (
-                    <Typography sx={{ mt: 1, fontSize: '14px', color: '#444', fontStyle: 'italic' }}>
-                      {racket.summary}
-                    </Typography>
+        {loading ? (
+          <div className="rounded-2xl bg-white/85 shadow-xl ring-1 ring-white/40 backdrop-blur-md p-12 flex flex-col items-center gap-4">
+            <div className="w-8 h-8 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin" />
+            <p className="text-sm text-slate-500">Generating your personalized recommendations...</p>
+          </div>
+        ) : error ? (
+          <div className="rounded-2xl bg-white/85 shadow-xl ring-1 ring-white/40 backdrop-blur-md p-10 text-center">
+            <p className="text-slate-500 text-sm mb-4">Could not load recommendations. Make sure the recommendation server is running.</p>
+            <Link href="/assessment" className="px-5 py-2 rounded-full bg-[#FFC038] text-white text-sm font-semibold hover:opacity-90 transition">
+              Retake Assessment
+            </Link>
+          </div>
+        ) : choice.length === 0 ? (
+          <div className="rounded-2xl bg-white/85 shadow-xl ring-1 ring-white/40 backdrop-blur-md p-10 text-center">
+            <p className="text-slate-500 text-sm mb-4">No recommendations found. Try retaking the assessment.</p>
+            <Link href="/assessment" className="px-5 py-2 rounded-full bg-[#FFC038] text-white text-sm font-semibold hover:opacity-90 transition">
+              Retake Assessment
+            </Link>
+          </div>
+        ) : (
+          <>
+            <div className="rounded-2xl bg-white/85 shadow-xl ring-1 ring-white/40 backdrop-blur-md overflow-hidden mb-6">
+              {choice.map((racket, index) => (
+                <div
+                  key={index}
+                  className={`flex flex-col sm:flex-row gap-6 p-8 ${index !== choice.length - 1 ? "border-b-4 border-slate-100" : ""}`}
+                >
+                  {/* Image */}
+                  {racket.img_url && (
+                    <div className="flex-shrink-0 flex items-center justify-center bg-gradient-to-br from-slate-50 to-sky-100 rounded-2xl p-4 w-full sm:w-44 h-44">
+                      <img
+                        src={racket.img_url}
+                        alt={racket.name}
+                        className="h-full object-contain drop-shadow-md"
+                      />
+                    </div>
                   )}
 
-                  <Box sx={{ mt: 1 }}>
-                    <img
-                      src={racket.img_url}
-                      alt={racket.name}
-                      style={{ border: '4px solid' }}
-                    />
-                  </Box>
-                  <button
-                    onClick={() => viewRac(racket.racket_id!)}
-                    className="w-full mt-3 bg-[#FFC038] font-semibold py-2 rounded-full text-black text-md hover:opacity-70 cursor-pointer">
-                    View Details
-                  </button>
-                </Box>
+                  {/* Details */}
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-1">
+                      <span className="text-sm font-semibold text-black">{labels[index]}</span>
+                    </div>
+                    <div className="flex items-start justify-between gap-2 mb-3">
+                      <h2 className={`${dmSans.className} text-xl font-black text-slate-900`}>{racket.name}</h2>
+                      {racket.price && (
+                        <span className="text-lg font-bold text-black flex-shrink-0">${racket.price}</span>
+                      )}
+                    </div>
 
-              </div>
+                    {/* Specs */}
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-2 mb-4">
+                      {racket.balance && (
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-widest text-blue-400">Balance</p>
+                          <p className="text-sm font-medium text-slate-800">{racket.balance}</p>
+                        </div>
+                      )}
+                      {racket.stiffness && (
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-widest text-blue-400">Stiffness</p>
+                          <p className="text-sm font-medium text-slate-800">{racket.stiffness}</p>
+                        </div>
+                      )}
+                      {racket.weight && (
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-widest text-blue-400">Weight</p>
+                          <p className="text-sm font-medium text-slate-800">{racket.weight}</p>
+                        </div>
+                      )}
+                      {racket.color && (
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-widest text-blue-400">Colors</p>
+                          <p className="text-sm font-medium text-slate-800">{racket.color}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Summary */}
+                    {racket.summary && (
+                      <div className="bg-sky-50 border border-sky-100 rounded-xl px-4 py-3 mb-4">
+                        <p className="text-xs font-semibold uppercase tracking-widest text-blue-400 mb-1">Why this racket?</p>
+                        <p className="text-sm text-slate-600 leading-relaxed italic">{racket.summary}</p>
+                      </div>
+                    )}
+
+                    {racket.racket_id && (
+                      <Link
+                        href={`/rackets/${racket.racket_id}`}
+                        className="inline-block px-5 py-2 rounded-full bg-[#FFC038] text-white text-xs font-semibold hover:opacity-90 transition"
+                      >
+                        View Racket →
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
 
-          <button
-            onClick={stringRec}
-            className={"mt-5 w-200 font-bold bg-[#FFC038] shadow-md py-4 text-black rounded-full text-lg hover:opacity-70 cursor-pointer"}
-
-          >See Recommended Strings
-          </button>
-        </div>
+            {/* String recommendation button */}
+            <div className="flex justify-center">
+              <button
+                onClick={() => router.push("/stringrec")}
+                className="px-8 py-3 rounded-full bg-[#FFC038] text-white font-semibold text-sm hover:opacity-90 transition cursor-pointer"
+              >
+                See Recommended Strings
+              </button>
+            </div>
+          </>
+        )}
       </div>
-    </div>
+    </main>
   );
 }

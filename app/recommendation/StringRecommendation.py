@@ -373,7 +373,7 @@ def user_vector(user_ans):
 def get_string_rec(user_ans):
     scaled_user = user_vector(user_ans)
     distances, indices = knn.kneighbors(scaled_user)
-    rec = string_df.iloc[indices[0]][['name', 'gauge', 'img_url']].to_dict(orient='records')
+    rec = string_df.iloc[indices[0]][['string_id', 'name', 'gauge', 'img_url']].to_dict(orient='records')
     return rec
 
 
