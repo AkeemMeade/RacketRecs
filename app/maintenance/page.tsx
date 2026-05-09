@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { Outfit } from "next/font/google";
 import { createClient } from "@/lib/supabase/client";
 
@@ -195,6 +195,10 @@ export default function MaintenanceTrackerPage() {
   const [pageError, setPageError] = useState("");
   const [saveMessage, setSaveMessage] = useState("");
 
+  const [notesDraft, setNotesDraft] = useState("");
+  const notesSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const previousNotesTrackedIdRef = useRef<string | null | undefined>(undefined);
+
   useEffect(() => {
     const fetchUserAndRackets = async () => {
       try {
@@ -297,6 +301,14 @@ export default function MaintenanceTrackerPage() {
     fetchTrackedRackets();
   }, [userId, allRackets]);
 
+  useEffect(() => {
+    return () => {
+      if (notesSaveTimeoutRef.current) {
+        clearTimeout(notesSaveTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const filteredRackets = useMemo(() => {
     const lower = query.toLowerCase().trim();
 
@@ -324,6 +336,22 @@ export default function MaintenanceTrackerPage() {
       trackedRackets.find((racket) => racket.trackedId === selectedTrackedId) ?? null
     );
   }, [trackedRackets, selectedTrackedId]);
+
+  useEffect(() => {
+    const nextTrackedId = selectedTrackedRacket?.trackedId ?? null;
+
+    if (previousNotesTrackedIdRef.current === nextTrackedId) {
+      return;
+    }
+
+    previousNotesTrackedIdRef.current = nextTrackedId;
+
+    if (selectedTrackedRacket) {
+      setNotesDraft(selectedTrackedRacket.notes ?? "");
+    } else {
+      setNotesDraft("");
+    }
+  }, [selectedTrackedRacket]);
 
   const addRacketToTracker = async (racket: ApiRacket) => {
     if (!userId) {
@@ -469,6 +497,42 @@ export default function MaintenanceTrackerPage() {
         racket.trackedId === trackedId ? updater(racket) : racket
       )
     );
+  };
+
+  const handleNotesChange = (value: string) => {
+    if (!selectedTrackedRacket) return;
+
+    setNotesDraft(value);
+    setPageError("");
+    setSaveMessage("");
+
+    if (notesSaveTimeoutRef.current) {
+      clearTimeout(notesSaveTimeoutRef.current);
+    }
+
+    notesSaveTimeoutRef.current = setTimeout(async () => {
+      const currentTrackedId = selectedTrackedRacket.trackedId;
+
+      try {
+        const { error } = await supabase
+          .from("tracked_rackets")
+          .update({ notes: value })
+          .eq("id", currentTrackedId);
+
+        if (error) {
+          throw error;
+        }
+
+        updateLocalTrackedRacket(currentTrackedId, (racket) => ({
+          ...racket,
+          notes: value,
+        }));
+
+        setSaveMessage("Notes saved.");
+      } catch (err) {
+        setPageError(err instanceof Error ? err.message : "Failed to save notes.");
+      }
+    }, 700);
   };
 
   const saveTrackedRacketDetails = async (
@@ -905,16 +969,11 @@ export default function MaintenanceTrackerPage() {
                         Notes
                     </label>
                     <textarea
-                        value={selectedTrackedRacket.notes}
-                        onChange={(e) =>
-                        saveTrackedRacketDetails(selectedTrackedRacket.trackedId, {
-                            notes: e.target.value,
-                        })
-                        }
-                        disabled={savingDetails}
-                        rows={4}
-                        placeholder="Add notes about tension, wear, damage, or feel..."
-                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200 disabled:cursor-not-allowed disabled:bg-slate-100"
+                      value={notesDraft}
+                      onChange={(e) => handleNotesChange(e.target.value)}
+                      rows={4}
+                      placeholder="Add notes about tension, wear, damage, or feel..."
+                      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200"
                     />
                     </div>
                 </div>

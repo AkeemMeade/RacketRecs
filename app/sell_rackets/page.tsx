@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { Outfit } from "next/font/google";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/lib/UserContext";
@@ -53,6 +53,10 @@ const conditionOptions = ["Like New", "Good", "Fair", "Heavily Used"];
 const statusOptions: Array<ListingStatus | "All"> = ["All", "Available", "Pending", "Sold"];
 const sortOptions = ["Newest", "Price: Low to High", "Price: High to Low"];
 
+const subscribeToHydration = () => () => {};
+const getClientHydrationSnapshot = () => true;
+const getServerHydrationSnapshot = () => false;
+
 const initialForm: ListingForm = {
   racket_name: "",
   brand: "",
@@ -88,11 +92,11 @@ export default function SellRacketsPage() {
   const [editingListing, setEditingListing] = useState<Listing | null>(null);
   const [deletingListingId, setDeletingListingId] = useState<string | null>(null);
   const [form, setForm] = useState<ListingForm>(initialForm);
-  const [hasHydrated, setHasHydrated] = useState(false);
-
-  useEffect(() => {
-    setHasHydrated(true);
-  }, []);
+  const hasHydrated = useSyncExternalStore(
+    subscribeToHydration,
+    getClientHydrationSnapshot,
+    getServerHydrationSnapshot
+  );
 
   const fetchListings = useCallback(async () => {
     setLoadingListings(true);
@@ -143,13 +147,6 @@ export default function SellRacketsPage() {
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       });
   }, [conditionFilter, listings, search, sortBy, statusFilter]);
-
-  const marketplaceStats = useMemo(() => {
-    const available = listings.filter((listing) => listing.status === "Available").length;
-    const myListings = user ? listings.filter((listing) => listing.seller_id === user.id).length : 0;
-
-    return { available, myListings };
-  }, [listings, user]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -362,11 +359,6 @@ export default function SellRacketsPage() {
             >
               {!isAuthReady ? "Checking account..." : user ? "Create Listing" : "Sign in to Sell"}
             </button>
-          </div>
-
-          <div className="mb-8 grid gap-4 sm:grid-cols-2">
-            <Stat label="Available listings" value={marketplaceStats.available.toString()} />
-            <Stat label="My listings" value={marketplaceStats.myListings.toString()} />
           </div>
 
           <div className="mb-8 grid gap-3 lg:grid-cols-[1fr_150px_140px_180px_auto]">
@@ -687,15 +679,6 @@ export default function SellRacketsPage() {
         </div>
       )}
     </main>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-xl bg-white px-4 py-4 shadow-sm ring-1 ring-slate-100">
-      <p className="text-sm text-slate-500">{label}</p>
-      <p className="mt-1 text-2xl font-bold text-slate-900">{value}</p>
-    </div>
   );
 }
 
