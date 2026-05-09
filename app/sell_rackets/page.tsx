@@ -150,13 +150,9 @@ export default function SellRacketsPage() {
 
   const marketplaceStats = useMemo(() => {
     const available = listings.filter((listing) => listing.status === "Available").length;
-    const averagePrice =
-      listings.length === 0
-        ? 0
-        : Math.round(listings.reduce((sum, listing) => sum + Number(listing.price), 0) / listings.length);
     const myListings = user ? listings.filter((listing) => listing.seller_id === user.id).length : 0;
 
-    return { available, averagePrice, myListings };
+    return { available, myListings };
   }, [listings, user]);
 
   const handleChange = (
@@ -373,9 +369,8 @@ export default function SellRacketsPage() {
             </button>
           </div>
 
-          <div className="mb-8 grid gap-4 sm:grid-cols-3">
+          <div className="mb-8 grid gap-4 sm:grid-cols-2">
             <Stat label="Available listings" value={marketplaceStats.available.toString()} />
-            <Stat label="Average price" value={`$${marketplaceStats.averagePrice}`} />
             <Stat label="My listings" value={marketplaceStats.myListings.toString()} />
           </div>
 
