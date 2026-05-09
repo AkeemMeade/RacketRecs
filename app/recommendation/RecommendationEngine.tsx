@@ -33,8 +33,10 @@ export default function RecommendationEngine() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const router = useRouter();
+  const [started, setStarted] = useState(false);
 
   useEffect(() => {
+    if (!started) return;
     const getRec = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       const { data: ans } = await supabase
@@ -123,20 +125,30 @@ In 2-3 sentences, explain why this racket is a good match for this user. Be spec
     };
 
     getRec();
-  }, []);
+  }, [started]);
 
   return (
     <main className={`${outfit.className} min-h-screen`}>
       <div className="max-w-4xl mx-auto px-4 py-10">
 
-        <h1 className="text-4xl font-black tracking-tight text-white drop-shadow-sm mb-2">
+        <h1 className={`${outfit.className} text-4xl font-black tracking-tight text-white drop-shadow-sm mb-2`}>
           Your Recommendations
         </h1>
         <p className="text-white/70 text-sm mb-8">
           Based on your assessment, here are the rackets best suited to your game.
         </p>
 
-        {loading ? (
+        {!started ? (
+          <div className="rounded-2xl bg-white/85 shadow-xl ring-1 ring-white/40 backdrop-blur-md p-12 flex flex-col items-center gap-4">
+            <p className="text-sm text-slate-500 mb-4">Ready to see your personalized recommendations?</p>
+            <button
+              onClick={() => setStarted(true)}
+              className="px-8 py-3 rounded-full bg-[#FFC038] text-white font-semibold text-sm hover:opacity-90 transition cursor-pointer"
+            >
+              Get My Recommendations
+            </button>
+          </div>
+        ) : loading ? (
           <div className="rounded-2xl bg-white/85 shadow-xl ring-1 ring-white/40 backdrop-blur-md p-12 flex flex-col items-center gap-4">
             <div className="w-8 h-8 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin" />
             <p className="text-sm text-slate-500">Generating your personalized recommendations...</p>
