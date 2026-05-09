@@ -351,7 +351,6 @@ export default function SellRacketsPage() {
 
   return (
     <main className={`${outfit.className} min-h-screen`}>
-      <div className="fixed inset-0 -z-10 bg-gradient-to-b from-blue-400 via-blue-300 to-blue-200" />
 
       <div className="-mt-5 mx-auto max-w-[1250px] px-4 py-12">
         <div className="rounded-2xl bg-white/70 p-8 shadow-xl backdrop-blur-sm sm:p-12">
