@@ -88,7 +88,7 @@ export default function StringRecommendation() {
 
  
       <Typography variant="h5" sx={{ textAlign: 'center', fontWeight: '1000', fontSize: '45px', marginBottom:'30px', fontFamily: outfit.style.fontFamily }}>
-          Recommendations
+          String Recommendations
       </Typography>
       <div className="bg-white/70 backdrop-blur-sm shadow-xl  rounded-2xl p-22  mx-auto mt-8, max-w-[1400px]">
 
@@ -130,11 +130,11 @@ export default function StringRecommendation() {
 
                 <Box>
 
-                <Box sx={{ mt: 1 }}>
+                <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', justifyContent: 'center'  }}>
                   <img
                     src={String.img_url}
                     alt={String.name}
-                    style={{ border: '4px solid' }}
+                    style={{ border: '4px solid', width: '300px', height: '300px',  }}
                   />
                 </Box>
               </Box>

@@ -140,7 +140,7 @@ In 2-3 sentences, explain why this racket is a good match for this user. Be spec
 
  
       <Typography variant="h5" sx={{ textAlign: 'center', fontWeight: '1000', fontSize: '45px', marginBottom:'30px', fontFamily: outfit.style.fontFamily }}>
-          Recommendations
+          Racket Recommendations
       </Typography>
       <div className="bg-white/70 backdrop-blur-sm shadow-xl  rounded-2xl p-22  mx-auto mt-8, max-w-[1400px]">
 
