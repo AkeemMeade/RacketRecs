@@ -46,11 +46,9 @@ interface BrowsingHistoryItem {
     racket_id: number | string;
     name: string | null;
     img_url: string | null;
-    manufacturer_id: number | null;
-    manufacturer: { name: string | null }[] | null;
-  }[] | null;
+    manufacturer: { name: string | null } | null;
+  } | null;
 }
-
 export default function BrowsingHistoryPage() {
   const supabase = useMemo(() => createClient(), []);
   const [mounted, setMounted] = useState(false);
@@ -102,29 +100,30 @@ const fetchHistory = async (currentUserId: string) => {
   setLoadingHistory(true);
 
   const { data, error } = await supabase
-    .from("browsing_history")
-    .select(`
-      id,
+  .from("browsing_history")
+  .select(`
+    id,
+    racket_id,
+    viewed_at,
+    racket:racket_id (
       racket_id,
-      viewed_at,
-      racket:racket_id (
-        racket_id,
-        name,
-        img_url,
-        manufacturer_id,
-        manufacturer:manufacturer_id (
-          name
-        )
+      name,
+      img_url,
+      manufacturer:manufacturer_id (
+        name
       )
-    `)
-    .eq("user_id", currentUserId)
-    .order("viewed_at", { ascending: false });
+    )
+  `)
+  .eq("user_id", currentUserId)
+  .order("viewed_at", { ascending: false });
+    console.log("history data:", data);
+    console.log("history error:", error);
 
   if (error) {
     console.error("Failed to load browsing history:", error.message);
     setHistory([]);
   } else {
-    setHistory((data ?? []) as BrowsingHistoryItem[]);
+    setHistory((data ?? []) as unknown as BrowsingHistoryItem[]);
   }
 
   setLoadingHistory(false);
@@ -288,19 +287,19 @@ if (!mounted) {
                     >
                       <img
                         src={
-                          item.racket?.[0]?.img_url || "/placeholder-racket.png"
+                          item.racket?.img_url || "/placeholder-racket.png"
                         }
-                        alt={item.racket?.[0]?.name || "Racket image"}
+                        alt={item.racket?.name || "Racket image"}
                         className="h-16 w-16 shrink-0 rounded-lg bg-white object-contain p-2 ring-1 ring-slate-100"
                       />
 
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-bold text-slate-900">
-                          {formatName(item.racket?.[0]?.name ?? null)}
+                          {formatName(item.racket?.name ?? null)}
                         </p>
 
                         <p className="mt-1 text-xs text-slate-500">
-                          {item.racket?.[0]?.manufacturer?.[0]?.name || "Unknown Manufacturer"}
+                          {item.racket?.manufacturer?.name || "Unknown Manufacturer"}
                         </p>
 
                         <p className="mt-1 text-xs text-slate-500">

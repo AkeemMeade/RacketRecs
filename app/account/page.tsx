@@ -276,6 +276,33 @@ export default function SettingsPage() {
             </SettingRow>
           </SectionCard>
 
+          {/* Browsing History */}
+          <SectionCard title="Browsing History" subtitle="Rackets you have recently viewed">
+            <SettingRow label="Clear History" description="Remove all rackets from your browsing history">
+              <button
+                onClick={() => confirm(
+                  "Clear browsing history?",
+                  "This will permanently remove all rackets from your browsing history. This cannot be undone.",
+                  async () => {
+                    if (!user) return;
+                    await supabase.from("browsing_history").delete().eq("user_id", user.id);
+                  }
+                )}
+                className="px-4 py-1.5 rounded-full border-2 border-slate-200 text-slate-500 text-xs font-semibold hover:bg-slate-50 transition cursor-pointer"
+              >
+                Clear all
+              </button>
+            </SettingRow>
+            <SettingRow label="View History" description="See all rackets you have recently viewed">
+              <Link
+                href="/browsing_history"
+                className="px-4 py-1.5 rounded-full border-2 border-slate-200 text-slate-500 text-xs font-semibold hover:bg-slate-50 transition"
+              >
+                View →
+              </Link>
+            </SettingRow>
+          </SectionCard>
+
           {/* Account Deletion */}
           <SectionCard title="Account Deletion" subtitle="Permanently remove your account and all associated data">
             <SettingRow label="Delete Account" description="Permanently delete your account and all associated data">
@@ -289,7 +316,6 @@ export default function SettingsPage() {
               />
             </SettingRow>
           </SectionCard>
-
         </div>
       </div>
     </main>
