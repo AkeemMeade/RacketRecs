@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from MachineLearning import get_rec
+from StringRecommendation import get_string_rec
 app= Flask(__name__)
 CORS(app, origins=["http://localhost:3000"])
 
@@ -9,6 +10,12 @@ CORS(app, origins=["http://localhost:3000"])
 def recommend():
     user_ans = request.get_json()
     rec = get_rec(user_ans)
+    return jsonify(rec)
+
+@app.route('/api/stringrec', methods = ['POST'])
+def recommend_string():
+    user_ans = request.get_json()
+    rec = get_string_rec(user_ans)
     return jsonify(rec)
 
 @app.route('/')

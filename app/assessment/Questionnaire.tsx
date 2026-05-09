@@ -114,7 +114,8 @@ export default function Questionnaire() {
   };
 
   const dataSubmit = async () => {
-    await supabase.from("assessment_response").insert([answer]);
+    const {data:{user}} = await supabase.auth.getUser();
+    await supabase.from("assessment_response").upsert({...answer, user_id:user?.id}, {onConflict:'user_id'});
     router.push("/recommendation");
   };
 
