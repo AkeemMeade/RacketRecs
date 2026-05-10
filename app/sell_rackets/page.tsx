@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { Outfit } from "next/font/google";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/lib/UserContext";
@@ -53,6 +53,10 @@ const conditionOptions = ["Like New", "Good", "Fair", "Heavily Used"];
 const statusOptions: Array<ListingStatus | "All"> = ["All", "Available", "Pending", "Sold"];
 const sortOptions = ["Newest", "Price: Low to High", "Price: High to Low"];
 
+const subscribeToHydration = () => () => {};
+const getClientHydrationSnapshot = () => true;
+const getServerHydrationSnapshot = () => false;
+
 const initialForm: ListingForm = {
   racket_name: "",
   brand: "",
@@ -83,16 +87,15 @@ export default function SellRacketsPage() {
   const [statusFilter, setStatusFilter] = useState<ListingStatus | "All">("All");
   const [sortBy, setSortBy] = useState(sortOptions[0]);
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
-  const [savedListingIds, setSavedListingIds] = useState<string[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingListing, setEditingListing] = useState<Listing | null>(null);
   const [deletingListingId, setDeletingListingId] = useState<string | null>(null);
   const [form, setForm] = useState<ListingForm>(initialForm);
-  const [hasHydrated, setHasHydrated] = useState(false);
-
-  useEffect(() => {
-    setHasHydrated(true);
-  }, []);
+  const hasHydrated = useSyncExternalStore(
+    subscribeToHydration,
+    getClientHydrationSnapshot,
+    getServerHydrationSnapshot
+  );
 
   const fetchListings = useCallback(async () => {
     setLoadingListings(true);
@@ -143,13 +146,6 @@ export default function SellRacketsPage() {
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       });
   }, [conditionFilter, listings, search, sortBy, statusFilter]);
-
-  const marketplaceStats = useMemo(() => {
-    const available = listings.filter((listing) => listing.status === "Available").length;
-    const myListings = user ? listings.filter((listing) => listing.seller_id === user.id).length : 0;
-
-    return { available, myListings };
-  }, [listings, user]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -273,12 +269,6 @@ export default function SellRacketsPage() {
     setSaving(false);
   };
 
-  const toggleSaved = (id: string) => {
-    setSavedListingIds((prev) =>
-      prev.includes(id) ? prev.filter((listingId) => listingId !== id) : [...prev, id]
-    );
-  };
-
   const markAsSold = async (listing: Listing) => {
     setNotice("");
     setError("");
@@ -320,7 +310,6 @@ export default function SellRacketsPage() {
       setError("Could not remove this listing. Check the delete RLS policy.");
     } else {
       setListings((prev) => prev.filter((item) => item.id !== listing.id));
-      setSavedListingIds((prev) => prev.filter((listingId) => listingId !== listing.id));
       setSelectedListing((prev) => (prev?.id === listing.id ? null : prev));
       setNotice("Listing removed.");
     }
@@ -364,11 +353,6 @@ export default function SellRacketsPage() {
             </button>
           </div>
 
-          <div className="mb-8 grid gap-4 sm:grid-cols-2">
-            <Stat label="Available listings" value={marketplaceStats.available.toString()} />
-            <Stat label="My listings" value={marketplaceStats.myListings.toString()} />
-          </div>
-
           <div className="mb-8 grid gap-3 lg:grid-cols-[1fr_150px_140px_180px_auto]">
             <input
               type="text"
@@ -408,7 +392,6 @@ export default function SellRacketsPage() {
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               {filteredListings.map((listing) => {
                 const isMine = user?.id === listing.seller_id;
-                const isSaved = savedListingIds.includes(listing.id);
 
                 return (
                   <article
@@ -497,15 +480,6 @@ export default function SellRacketsPage() {
                         >
                           View Details
                         </button>
-                        {!isMine && (
-                          <button
-                            type="button"
-                            onClick={() => toggleSaved(listing.id)}
-                            className="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-200 cursor-pointer"
-                          >
-                            {isSaved ? "Saved" : "Save"}
-                          </button>
-                        )}
                       </div>
                     </div>
                   </article>
@@ -656,7 +630,7 @@ export default function SellRacketsPage() {
                   </div>
                 </div>
 
-                <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                <div className="mt-6">
                   <a
                     href={
                       selectedListing.contact_email
@@ -673,13 +647,6 @@ export default function SellRacketsPage() {
                   >
                     Email Seller
                   </a>
-                  <button
-                    type="button"
-                    onClick={() => toggleSaved(selectedListing.id)}
-                    className="cursor-pointer inline-flex h-11 items-center justify-center rounded-full bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-800"
-                  >
-                    {savedListingIds.includes(selectedListing.id) ? "Saved" : "Save Listing"}
-                  </button>
                 </div>
               </>
             )}
@@ -687,15 +654,6 @@ export default function SellRacketsPage() {
         </div>
       )}
     </main>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-xl bg-white px-4 py-4 shadow-sm ring-1 ring-slate-100">
-      <p className="text-sm text-slate-500">{label}</p>
-      <p className="mt-1 text-2xl font-bold text-slate-900">{value}</p>
-    </div>
   );
 }
 
