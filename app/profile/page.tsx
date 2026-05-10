@@ -8,7 +8,7 @@ import Link from "next/link";
 import { CiCirclePlus } from "react-icons/ci";
 import { FaEdit } from "react-icons/fa";
 import { PostsTab } from "@/components/postsTab";
-import { MarketplaceTab } from "./MarketplaceTab";
+import { MarketplaceTab } from "@/components/MarketplaceTab";
 
 
 const outfit = Outfit({ subsets: ["latin"], weight: ["300", "400", "500", "600", "700"] });
@@ -107,7 +107,8 @@ export default function ProfilePage() {
     setIsEditingBio(false);
   };
 
-  const tabs = ["Marketplace", "Posts", "Favorites", "Activity"] as const;
+  {/*, "Favorites", "Activity"*/ }
+  const tabs = ["Marketplace", "Posts"] as const;
   const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>("Marketplace");
 
   if (loading) {
@@ -130,8 +131,8 @@ export default function ProfilePage() {
 
           {/* Banner */}
           {/* edit banner color*/}
-          
-          <div className="h-36 bg-gradient-to-r from-blue-900"/>  
+
+          <div className="h-36 bg-gradient-to-r from-blue-900" />
           <div className="px-8 py-8 md:px-10 md:py-10">
             <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex items-center gap-4">
@@ -239,11 +240,10 @@ export default function ProfilePage() {
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`rounded-full px-4 py-2 text-sm font-semibold transition cursor-pointer ${
-                    activeTab === tab
+                  className={`rounded-full px-4 py-2 text-sm font-semibold transition cursor-pointer ${activeTab === tab
                       ? "bg-[#FFC038] text-white"
                       : "bg-slate-100 text-slate-600 hover:bg-blue-200"
-                  }`}
+                    }`}
                 >
                   {tab}
                 </button>
@@ -253,12 +253,14 @@ export default function ProfilePage() {
 
           <div className="px-6 py-8">
             {activeTab === "Marketplace" && (
-  <MarketplaceTab userId={user!.id} />
-)}
+              <MarketplaceTab userId={user!.id} isOwner={true} />
+            )}
 
             {activeTab === "Posts" && (
               <PostsTab userId={user!.id} isOwner={true} username={profile?.username ?? ""} />
             )}
+
+            {/* 
 
             {activeTab === "Favorites" && (
               <div>
@@ -270,6 +272,8 @@ export default function ProfilePage() {
               </div>
             )}
 
+            
+
             {activeTab === "Activity" && (
               <div>
                 <h2 className="text-xl font-bold text-slate-900">Activity</h2>
@@ -279,6 +283,7 @@ export default function ProfilePage() {
                 </div>
               </div>
             )}
+              */}
           </div>
         </div>
       </div>

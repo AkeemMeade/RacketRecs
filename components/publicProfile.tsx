@@ -4,6 +4,7 @@ import { useState, useEffect, use } from "react";
 import { Outfit } from "next/font/google";
 import { createClient } from "@/lib/supabase/client";
 import { PostsTab } from "./postsTab";
+import { MarketplaceTab } from "@/components/MarketplaceTab";
 
 const outfit = Outfit({ subsets: ["latin"], weight: ["300", "400", "500", "600", "700"] });
 const supabase = createClient();
@@ -21,8 +22,8 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userna
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
-
-  const tabs = ["Marketplace", "Posts", "Favorites", "Activity"] as const;
+  {/*"Favorites", "Activity"*/}
+  const tabs = ["Marketplace", "Posts"] as const;
   const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>("Marketplace");
 
   useEffect(() => {
@@ -147,6 +148,7 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userna
               <PostsTab userId={profile?.id ?? ""} isOwner={false} username={username} />
             )}
 
+            {/*
             {activeTab === "Favorites" && (
               <div>
                 <h2 className="text-xl font-bold text-slate-900">Favorites</h2>
@@ -157,6 +159,7 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userna
               </div>
             )}
 
+            
             {activeTab === "Activity" && (
               <div>
                 <h2 className="text-xl font-bold text-slate-900">Activity</h2>
@@ -166,6 +169,7 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userna
                 </div>
               </div>
             )}
+              */}
           </div>
         </div>
 

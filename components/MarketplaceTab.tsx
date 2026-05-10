@@ -18,7 +18,7 @@ interface Listing {
   created_at: string;
 }
 
-export function MarketplaceTab({ userId }: { userId: string }) {
+export function MarketplaceTab({ userId, isOwner = false }: { userId: string; isOwner?: boolean }) {
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -48,12 +48,14 @@ export function MarketplaceTab({ userId }: { userId: string }) {
           <h2 className="text-xl font-bold text-slate-900">My Listings</h2>
           <p className="mt-1 text-sm text-slate-500">{listings.length} listing{listings.length !== 1 ? "s" : ""}</p>
         </div>
+        {isOwner && (
         <Link
           href="/sell_rackets"
           className="px-4 py-2 rounded-full bg-[#FFC038] text-white text-xs font-semibold hover:opacity-90 transition"
         >
           + New Listing
         </Link>
+        )}
       </div>
 
       {listings.length === 0 ? (
