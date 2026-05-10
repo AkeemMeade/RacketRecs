@@ -87,7 +87,6 @@ export default function SellRacketsPage() {
   const [statusFilter, setStatusFilter] = useState<ListingStatus | "All">("All");
   const [sortBy, setSortBy] = useState(sortOptions[0]);
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
-  const [savedListingIds, setSavedListingIds] = useState<string[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingListing, setEditingListing] = useState<Listing | null>(null);
   const [deletingListingId, setDeletingListingId] = useState<string | null>(null);
@@ -270,12 +269,6 @@ export default function SellRacketsPage() {
     setSaving(false);
   };
 
-  const toggleSaved = (id: string) => {
-    setSavedListingIds((prev) =>
-      prev.includes(id) ? prev.filter((listingId) => listingId !== id) : [...prev, id]
-    );
-  };
-
   const markAsSold = async (listing: Listing) => {
     setNotice("");
     setError("");
@@ -317,7 +310,6 @@ export default function SellRacketsPage() {
       setError("Could not remove this listing. Check the delete RLS policy.");
     } else {
       setListings((prev) => prev.filter((item) => item.id !== listing.id));
-      setSavedListingIds((prev) => prev.filter((listingId) => listingId !== listing.id));
       setSelectedListing((prev) => (prev?.id === listing.id ? null : prev));
       setNotice("Listing removed.");
     }
@@ -400,7 +392,6 @@ export default function SellRacketsPage() {
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               {filteredListings.map((listing) => {
                 const isMine = user?.id === listing.seller_id;
-                const isSaved = savedListingIds.includes(listing.id);
 
                 return (
                   <article
@@ -489,15 +480,6 @@ export default function SellRacketsPage() {
                         >
                           View Details
                         </button>
-                        {!isMine && (
-                          <button
-                            type="button"
-                            onClick={() => toggleSaved(listing.id)}
-                            className="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-200 cursor-pointer"
-                          >
-                            {isSaved ? "Saved" : "Save"}
-                          </button>
-                        )}
                       </div>
                     </div>
                   </article>
@@ -648,7 +630,7 @@ export default function SellRacketsPage() {
                   </div>
                 </div>
 
-                <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                <div className="mt-6">
                   <a
                     href={
                       selectedListing.contact_email
@@ -665,13 +647,6 @@ export default function SellRacketsPage() {
                   >
                     Email Seller
                   </a>
-                  <button
-                    type="button"
-                    onClick={() => toggleSaved(selectedListing.id)}
-                    className="cursor-pointer inline-flex h-11 items-center justify-center rounded-full bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-800"
-                  >
-                    {savedListingIds.includes(selectedListing.id) ? "Saved" : "Save Listing"}
-                  </button>
                 </div>
               </>
             )}
