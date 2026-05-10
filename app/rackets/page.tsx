@@ -116,6 +116,38 @@ export default function RacketsPage() {
     selectedWeightRanges,
   ]);
 
+  useEffect(() => {
+    let filtered = strings;
+
+    if (searchQuery.trim() !== "") {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (s) =>
+          s.name?.toLowerCase().includes(query) ||
+          s.manufacturer?.name?.toLowerCase().includes(query)
+      );
+    }
+
+    if (selectedManufacturers.length > 0) {
+      filtered = filtered.filter((s) =>
+        selectedManufacturers.includes(s.manufacturer?.name)
+      );
+    }
+
+    if (selectedWeightRanges.length > 0) {
+      filtered = filtered.filter((s) =>
+        selectedWeightRanges.includes(String(s.gauge))
+      );
+    }
+
+    setFilteredStrings(filtered);
+  }, [
+    searchQuery,
+    strings,
+    selectedManufacturers,
+    selectedWeightRanges
+  ]);
+
   // get rackets from api route
   const fetchRackets = async () => {
     try {
@@ -213,7 +245,7 @@ export default function RacketsPage() {
 
             </div>
           </div>
-          
+
           {/* Search bar */}
           <div className="mb-8 flex gap-5 -mt-10">
             <div className="relative flex-1">
@@ -239,31 +271,31 @@ export default function RacketsPage() {
             </div>
             {searchQuery && (
               <p className="mt-2 text-sm text-gray-600">
-                Found {filteredRackets.length} racket
-                {filteredRackets.length !== 1 ? "s" : ""}
+                Found {view === "rackets" ? filteredRackets.length : filteredStrings.length} {view}
+                {(view === "rackets" ? filteredRackets.length : filteredStrings.length) !== 1 ? "s" : ""}
               </p>
             )}
             {/* end of Search bar */}
 
             {/* Change View  */}
             <button
-            onClick={() => {
-              if (view === "rackets") {
-                setView("strings");
+              onClick={() => {
+                if (view === "rackets") {
+                  setView("strings");
 
-                if (strings.length === 0) fetchStrings();
-              } else {
-                setView("rackets");
-              }
-            }}
-            className={`${outfit.className} 
+                  if (strings.length === 0) fetchStrings();
+                } else {
+                  setView("rackets");
+                }
+              }}
+              className={`${outfit.className} 
             text-black bg-[#FFC038] 
             rounded-full p-3 w-auto 
             hover:opacity-90 
             hover:cursor-pointer 
             hover:outline mb-10 text-white shadow-20`}>
-            {view === "rackets" ? "Browse Strings" : "Browse Rackets"}
-          </button>
+              {view === "rackets" ? "Browse Strings" : "Browse Rackets"}
+            </button>
 
 
             {/* Filter button */}
@@ -282,76 +314,89 @@ export default function RacketsPage() {
               </button>
 
               {showFilters && (
-                <div
-                  className={`absolute left-43 -mt-34 w-64 bg-white rounded-lg shadow-lg p-4 z-20`}
-                >
-                  <h3 className={`font-bold text-black ${outfit.className}`}>
-                    Balance
-                  </h3>
+                <div className={`absolute left-43 -mt-34 w-64 bg-white rounded-lg shadow-lg p-4 z-20`}>
 
-                  <div className="flex flex-col text-black ">
-                    {["Head Heavy", "Head Light", "Even"].map((balance) => (
-                      <label key={balance}>
-                        <Checkbox sx={{
-                          '&.Mui-checked': {
-                            color: '#FFC038'
-                          }
-                        }}
-                          checked={selectedBalances.includes(balance)}
-                          onChange={() => {
-                            if (selectedBalances.includes(balance)) {
-                              setSelectedBalances(
-                                selectedBalances.filter((b) => b !== balance),
-                              );
-                            } else {
-                              setSelectedBalances([
-                                ...selectedBalances,
-                                balance,
-                              ]);
-                            }
-                          }}
-                        />
-                        {balance}
-                      </label>
-                    ))}
-                  </div>
+                  {view === "rackets" ? (
+                    <>
+                      <h3 className={`font-bold text-black ${outfit.className}`}>Balance</h3>
+                      <div className="flex flex-col text-black">
+                        {["Head Heavy", "Head Light", "Even"].map((balance) => (
+                          <label key={balance}>
+                            <Checkbox sx={{ '&.Mui-checked': { color: '#FFC038' } }}
+                              checked={selectedBalances.includes(balance)}
+                              onChange={() => {
+                                if (selectedBalances.includes(balance)) {
+                                  setSelectedBalances(selectedBalances.filter((b) => b !== balance));
+                                } else {
+                                  setSelectedBalances([...selectedBalances, balance]);
+                                }
+                              }}
+                            />
+                            {balance}
+                          </label>
+                        ))}
+                      </div>
 
-                  <h3 className={`font-bold text-black ${outfit.className}`}>Manufacturer</h3>
+                      <h3 className={`font-bold text-black ${outfit.className}`}>Manufacturer</h3>
+                      <div className="flex flex-col text-black">
+                        {["Yonex", "Victor", "Li-Ning", "Hundred", "Ashaway", "Apacs", "Technist", "Gosen", "Jnice", "Mizuno"].map((manufacturer) => (
+                          <label key={manufacturer}>
+                            <Checkbox sx={{ '&.Mui-checked': { color: '#FFC038' } }}
+                              checked={selectedManufacturers.includes(manufacturer)}
+                              onChange={() => {
+                                if (selectedManufacturers.includes(manufacturer)) {
+                                  setSelectedManufacturers(selectedManufacturers.filter((m) => m !== manufacturer));
+                                } else {
+                                  setSelectedManufacturers([...selectedManufacturers, manufacturer]);
+                                }
+                              }}
+                            />
+                            {manufacturer}
+                          </label>
+                        ))}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <h3 className={`font-bold text-black ${outfit.className}`}>Gauge</h3>
+                      <div className="flex flex-col text-black">
+                        {["0.61mm", "0.62mm", "0.65mm", "0.66mm", "0.67mm", "0.68mm", "0.70mm"].map((gauge) => (
+                          <label key={gauge}>
+                            <Checkbox sx={{ '&.Mui-checked': { color: '#FFC038' } }}
+                              checked={selectedWeightRanges.includes(gauge)}
+                              onChange={() => {
+                                if (selectedWeightRanges.includes(gauge)) {
+                                  setSelectedWeightRanges(selectedWeightRanges.filter((g) => g !== gauge));
+                                } else {
+                                  setSelectedWeightRanges([...selectedWeightRanges, gauge]);
+                                }
+                              }}
+                            />
+                            {gauge}
+                          </label>
+                        ))}
+                      </div>
 
-                  <div className="flex flex-col text-black">
-                    {["Yonex", "Victor", "Li-Ning", "Hundred", "Ashaway", "Apacs", "Technist", "Gosen", "Jnice", "Mizuno"].map(
-                      (manufacturer) => (
-                        <label key={manufacturer}>
-                          <Checkbox sx={{
-                            '&.Mui-checked': {
-                              color: '#FFC038'
-                            }
-                          }}
-                            checked={selectedManufacturers.includes(
-                              manufacturer,
-                            )}
-                            onChange={() => {
-                              if (
-                                selectedManufacturers.includes(manufacturer)
-                              ) {
-                                setSelectedManufacturers(
-                                  selectedManufacturers.filter(
-                                    (m) => m !== manufacturer,
-                                  ),
-                                );
-                              } else {
-                                setSelectedManufacturers([
-                                  ...selectedManufacturers,
-                                  manufacturer,
-                                ]);
-                              }
-                            }}
-                          />
-                          {manufacturer}
-                        </label>
-                      ),
-                    )}
-                  </div>
+                      <h3 className={`font-bold text-black ${outfit.className}`}>Manufacturer</h3>
+                      <div className="flex flex-col text-black">
+                        {["Yonex", "Victor", "Li-Ning", "Ashaway", "Gosen", "Mizuno"].map((manufacturer) => (
+                          <label key={manufacturer}>
+                            <Checkbox sx={{ '&.Mui-checked': { color: '#FFC038' } }}
+                              checked={selectedManufacturers.includes(manufacturer)}
+                              onChange={() => {
+                                if (selectedManufacturers.includes(manufacturer)) {
+                                  setSelectedManufacturers(selectedManufacturers.filter((m) => m !== manufacturer));
+                                } else {
+                                  setSelectedManufacturers([...selectedManufacturers, manufacturer]);
+                                }
+                              }}
+                            />
+                            {manufacturer}
+                          </label>
+                        ))}
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
             </div>
@@ -375,12 +420,12 @@ export default function RacketsPage() {
           )}
 
           {/* Empty State */}
-          {!loading && filteredRackets.length === 0 && !error && (
+          {!loading && (view === "rackets" ? filteredRackets : filteredStrings).length === 0 && !error && (
             <div className="text-center py-20">
               <p className="text-gray-500 text-lg">
                 {searchQuery
-                  ? "No rackets match your search."
-                  : "No rackets found."}
+                  ? `No ${view} match your search.`
+                  : `No ${view} found.`}
               </p>
             </div>
           )}
