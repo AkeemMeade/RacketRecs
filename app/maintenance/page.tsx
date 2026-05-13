@@ -23,15 +23,15 @@ type ApiRacket = {
   img_url: string | null;
   manufacturer_id: number | null;
   manufacturer?:
-    | {
-        manufacturer_id?: number | null;
-        name?: string | null;
-      }
-    | {
-        manufacturer_id?: number | null;
-        name?: string | null;
-      }[]
-    | null;
+  | {
+    manufacturer_id?: number | null;
+    name?: string | null;
+  }
+  | {
+    manufacturer_id?: number | null;
+    name?: string | null;
+  }[]
+  | null;
   racket_retailer?: RetailerPrice[] | null;
 };
 
@@ -199,6 +199,7 @@ export default function MaintenanceTrackerPage() {
   const notesSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const previousNotesTrackedIdRef = useRef<string | null | undefined>(undefined);
 
+
   useEffect(() => {
     const fetchUserAndRackets = async () => {
       try {
@@ -337,6 +338,31 @@ export default function MaintenanceTrackerPage() {
     );
   }, [trackedRackets, selectedTrackedId]);
 
+  const [lastRestrungDraft, setLastRestrungDraft] = useState(
+    selectedTrackedRacket?.lastRestrung
+      ? new Date(selectedTrackedRacket.lastRestrung).toISOString().split("T")[0]
+      : ""
+  );
+
+  const [lastGripChangeDraft, setLastGripChangeDraft] = useState(
+    selectedTrackedRacket?.lastGripChange
+      ? new Date(selectedTrackedRacket.lastGripChange).toISOString().split("T")[0]
+      : ""
+  );
+
+  useEffect(() => {
+    setLastRestrungDraft(
+      selectedTrackedRacket?.lastRestrung
+        ? new Date(selectedTrackedRacket.lastRestrung).toISOString().split("T")[0]
+        : ""
+    );
+    setLastGripChangeDraft(
+      selectedTrackedRacket?.lastGripChange
+        ? new Date(selectedTrackedRacket.lastGripChange).toISOString().split("T")[0]
+        : ""
+    );
+  }, [selectedTrackedRacket?.trackedId]);
+
   useEffect(() => {
     const nextTrackedId = selectedTrackedRacket?.trackedId ?? null;
 
@@ -371,7 +397,7 @@ export default function MaintenanceTrackerPage() {
       setSubmittingTrackId(racket.racket_id);
       setPageError("");
       setSaveMessage("");
-            const { data: insertedTracked, error: insertTrackedError } = await supabase
+      const { data: insertedTracked, error: insertTrackedError } = await supabase
         .from("tracked_rackets")
         .insert({
           user_id: userId,
@@ -588,6 +614,7 @@ export default function MaintenanceTrackerPage() {
             ? updates.lastGripChange
             : racket.lastGripChange,
         notes: updates.notes !== undefined ? updates.notes : racket.notes,
+
       }));
 
       setSaveMessage("Maintenance details saved.");
@@ -797,8 +824,8 @@ export default function MaintenanceTrackerPage() {
                           {alreadyTracked
                             ? "Tracked"
                             : submittingTrackId === racket.racket_id
-                            ? "Adding..."
-                            : "Track"}
+                              ? "Adding..."
+                              : "Track"}
                         </button>
                       </div>
                     </div>
@@ -832,11 +859,10 @@ export default function MaintenanceTrackerPage() {
                     <div
                       key={racket.trackedId}
                       onClick={() => setSelectedTrackedId(racket.trackedId)}
-                      className={`cursor-pointer rounded-2xl border p-4 text-left shadow-sm transition ${
-                        selectedTrackedId === racket.trackedId
+                      className={`cursor-pointer rounded-2xl border p-4 text-left shadow-sm transition ${selectedTrackedId === racket.trackedId
                           ? "border-amber-300 bg-amber-50"
                           : "border-slate-200 bg-slate-50 hover:border-slate-300"
-                      }`}
+                        }`}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
@@ -879,178 +905,180 @@ export default function MaintenanceTrackerPage() {
                         </p>
                       </div>
                     </div>
-                    ))}
+                  ))}
                 </div>
               )}
             </div>
             <div className="rounded-3xl bg-white/85 p-6 shadow-[0_12px_30px_rgba(15,23,42,0.18)] backdrop-blur-sm">
-            <h2 className="text-2xl font-bold text-slate-800">
+              <h2 className="text-2xl font-bold text-slate-800">
                 Maintenance Details
-            </h2>
+              </h2>
 
-            {!selectedTrackedRacket ? (
+              {!selectedTrackedRacket ? (
                 <div className="mt-6 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-slate-500">
-                Select a tracked racket to manage maintenance.
+                  Select a tracked racket to manage maintenance.
                 </div>
-            ) : (
+              ) : (
                 <div className="mt-6 space-y-6">
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
                     <h3 className="text-xl font-semibold text-slate-800">
-                    {formatRacketName(selectedTrackedRacket.name)}
+                      {formatRacketName(selectedTrackedRacket.name)}
                     </h3>
                     <p className="mt-1 text-sm text-slate-600">
-                    {selectedTrackedRacket.brand} • {selectedTrackedRacket.weight} •{" "}
-                    {selectedTrackedRacket.balance} • {selectedTrackedRacket.stiffness}
+                      {selectedTrackedRacket.brand} • {selectedTrackedRacket.weight} •{" "}
+                      {selectedTrackedRacket.balance} • {selectedTrackedRacket.stiffness}
                     </p>
 
                     <div className="mt-5 grid gap-4 md:grid-cols-3">
-                    <div>
+                      <div>
                         <label className="mb-2 block text-sm font-medium text-slate-700">
-                        Condition
+                          Condition
                         </label>
                         <select
-                        value={selectedTrackedRacket.condition}
-                        onChange={(e) =>
+                          value={selectedTrackedRacket.condition}
+                          onChange={(e) =>
                             saveTrackedRacketDetails(selectedTrackedRacket.trackedId, {
-                            condition: e.target.value as
+                              condition: e.target.value as
                                 | "Excellent"
                                 | "Good"
                                 | "Fair"
                                 | "Needs Attention",
                             })
-                        }
-                        disabled={savingDetails}
-                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200 disabled:cursor-not-allowed disabled:bg-slate-100"
+                          }
+                          disabled={savingDetails}
+                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200 disabled:cursor-not-allowed disabled:bg-slate-100"
                         >
-                        <option value="Excellent">Excellent</option>
-                        <option value="Good">Good</option>
-                        <option value="Fair">Fair</option>
-                        <option value="Needs Attention">Needs Attention</option>
+                          <option value="Excellent">Excellent</option>
+                          <option value="Good">Good</option>
+                          <option value="Fair">Fair</option>
+                          <option value="Needs Attention">Needs Attention</option>
                         </select>
-                    </div>
+                      </div>
 
-                    <div>
+                      <div>
                         <label className="mb-2 block text-sm font-medium text-slate-700">
-                        Last Restrung
+                          Last Restrung
                         </label>
                         <input
-                        type="date"
-                        value={selectedTrackedRacket.lastRestrung ?? ""}
-                        onChange={(e) =>
+                          type="date"
+                          value={lastRestrungDraft}
+                          onChange={(e) => setLastRestrungDraft(e.target.value)}
+                          onBlur={() =>
                             saveTrackedRacketDetails(selectedTrackedRacket.trackedId, {
-                            lastRestrung: e.target.value || null,
+                              lastRestrung: lastRestrungDraft || null,
                             })
-                        }
-                        disabled={savingDetails}
-                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200 disabled:cursor-not-allowed disabled:bg-slate-100"
+                          }
+                          disabled={savingDetails}
+                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200 disabled:cursor-not-allowed disabled:bg-slate-100"
                         />
-                    </div>
+                      </div>
 
-                    <div>
+                      <div>
                         <label className="mb-2 block text-sm font-medium text-slate-700">
-                        Last Grip Change
+                          Last Grip Change
                         </label>
                         <input
-                        type="date"
-                        value={selectedTrackedRacket.lastGripChange ?? ""}
-                        onChange={(e) =>
+                          type="date"
+                          value={lastGripChangeDraft}
+                          onChange={(e) => setLastGripChangeDraft(e.target.value)}
+                          onBlur={() =>
                             saveTrackedRacketDetails(selectedTrackedRacket.trackedId, {
-                            lastGripChange: e.target.value || null,
+                              lastGripChange: lastGripChangeDraft || null,
                             })
-                        }
-                        disabled={savingDetails}
-                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200 disabled:cursor-not-allowed disabled:bg-slate-100"
+                          }
+                          disabled={savingDetails}
+                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200 disabled:cursor-not-allowed disabled:bg-slate-100"
                         />
-                    </div>
+                      </div>
                     </div>
 
                     <div className="mt-5">
-                    <label className="mb-2 block text-sm font-medium text-slate-700">
+                      <label className="mb-2 block text-sm font-medium text-slate-700">
                         Notes
-                    </label>
-                    <textarea
-                      value={notesDraft}
-                      onChange={(e) => handleNotesChange(e.target.value)}
-                      rows={4}
-                      placeholder="Add notes about tension, wear, damage, or feel..."
-                      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200"
-                    />
+                      </label>
+                      <textarea
+                        value={notesDraft}
+                        onChange={(e) => handleNotesChange(e.target.value)}
+                        rows={4}
+                        placeholder="Add notes about tension, wear, damage, or feel..."
+                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200"
+                      />
                     </div>
-                </div>
+                  </div>
 
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
                     <div className="flex items-center justify-between gap-4">
-                    <h3 className="text-lg font-semibold text-slate-800">Checklist</h3>
-                    <span className="text-sm text-slate-500">
+                      <h3 className="text-lg font-semibold text-slate-800">Checklist</h3>
+                      <span className="text-sm text-slate-500">
                         {
-                        selectedTrackedRacket.tasks.filter((task) => task.completed).length
+                          selectedTrackedRacket.tasks.filter((task) => task.completed).length
                         }
                         /{selectedTrackedRacket.tasks.length} completed
-                    </span>
+                      </span>
                     </div>
 
                     <div className="mt-4 space-y-3">
-                    {selectedTrackedRacket.tasks.map((task) => (
+                      {selectedTrackedRacket.tasks.map((task) => (
                         <div
-                        key={task.id}
-                        className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3"
+                          key={task.id}
+                          className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3"
                         >
-                        <label className="flex items-center gap-3 text-sm text-slate-700">
+                          <label className="flex items-center gap-3 text-sm text-slate-700">
                             <input
-                            type="checkbox"
-                            checked={task.completed}
-                            onChange={(e) =>
+                              type="checkbox"
+                              checked={task.completed}
+                              onChange={(e) =>
                                 toggleTask(
-                                selectedTrackedRacket.trackedId,
-                                task.id,
-                                e.target.checked
+                                  selectedTrackedRacket.trackedId,
+                                  task.id,
+                                  e.target.checked
                                 )
-                            }
-                            className="h-4 w-4 rounded border-slate-300 text-amber-500 focus:ring-amber-400"
+                              }
+                              className="h-4 w-4 rounded border-slate-300 text-amber-500 focus:ring-amber-400"
                             />
                             <span
-                            className={
+                              className={
                                 task.completed
-                                ? "text-slate-400 line-through"
-                                : "text-slate-700"
-                            }
+                                  ? "text-slate-400 line-through"
+                                  : "text-slate-700"
+                              }
                             >
-                            {task.label}
+                              {task.label}
                             </span>
-                        </label>
+                          </label>
 
-                        {task.isCustom && (
+                          {task.isCustom && (
                             <button
-                            onClick={() =>
+                              onClick={() =>
                                 deleteCustomTask(selectedTrackedRacket.trackedId, task.id)
-                            }
-                            className="rounded-xl border border-red-200 bg-white px-3 py-2 text-xs font-medium text-red-500 transition hover:bg-red-50"
+                              }
+                              className="rounded-xl border border-red-200 bg-white px-3 py-2 text-xs font-medium text-red-500 transition hover:bg-red-50"
                             >
-                            Delete
+                              Delete
                             </button>
-                        )}
+                          )}
                         </div>
-                    ))}
+                      ))}
                     </div>
 
                     <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-                    <input
+                      <input
                         value={newTaskLabel}
                         onChange={(e) => setNewTaskLabel(e.target.value)}
                         className="flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200"
                         placeholder="Add a custom maintenance task..."
-                    />
-                    <button
+                      />
+                      <button
                         onClick={addCustomTask}
                         disabled={addingTask}
                         className="rounded-2xl bg-amber-400 px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500"
-                    >
+                      >
                         {addingTask ? "Adding..." : "Add Task"}
-                    </button>
+                      </button>
                     </div>
+                  </div>
                 </div>
-                </div>
-            )}
+              )}
             </div>
           </div>
         </div>

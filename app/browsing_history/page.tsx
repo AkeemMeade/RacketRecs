@@ -191,11 +191,10 @@ if (!mounted) {
 
   return (
     <main className={`${outfit.className} min-h-screen`}>
-      <div className="fixed inset-0 -z-10 bg-gradient-to-b from-blue-400 via-blue-300 to-blue-200" />
 
       <div className="mx-auto w-full max-w-6xl px-4 py-10">
         <div className="mb-8">
-          <h1 className="text-4xl font-black tracking-tight text-white drop-shadow-sm">
+          <h1 className={`${outfit.className} text-4xl font-black tracking-tight text-white drop-shadow-sm`}>
             Browsing History
           </h1>
           <p className="mt-2 max-w-2xl text-white/90">

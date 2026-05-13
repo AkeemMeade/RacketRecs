@@ -40,7 +40,7 @@ Example:
 ## Frequently asked questions
 
 **Selling Rackets directly**
-- We currently do not facilitate direct sales. However, you can find new rackets on our [Browse Rackets](/rackets) page and used rackets on our [Marketplace](/marketplace) page.
+- We currently do not facilitate direct sales. However, you can find new rackets on our [Browse Rackets](/rackets) page and used rackets on our [Marketplace](/sell_rackets) page.
  
 **Buying Used Rackets**
 - You can buy used rackets that other users have listed for sale. Just go to the - [market](/marketplace) page and click Marketplace.

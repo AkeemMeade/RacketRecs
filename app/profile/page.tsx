@@ -9,6 +9,7 @@ import { CiCirclePlus } from "react-icons/ci";
 import { FaEdit } from "react-icons/fa";
 import { PostsTab } from "@/components/postsTab";
 import { MarketplaceTab } from "@/components/MarketplaceTab";
+import { useRouter } from "next/navigation";
 
 
 const outfit = Outfit({ subsets: ["latin"], weight: ["300", "400", "500", "600", "700"] });
@@ -21,7 +22,8 @@ interface Profile {
 }
 
 export default function ProfilePage() {
-  const { user } = useUser();
+  const { user, loading: authLoading } = useUser();
+  const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [bioDraft, setBioDraft] = useState("");
   const [isEditingBio, setIsEditingBio] = useState(false);
@@ -42,6 +44,12 @@ export default function ProfilePage() {
     }
     fetchProfile();
   }, [user]);
+
+  useEffect(() => {
+    if (!user) {
+      router.push("/sign-in");
+    }
+  }, [user, authLoading])
 
   const profilePicture = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -118,6 +126,7 @@ export default function ProfilePage() {
       </div>
     );
   }
+  if (!user) return null;
 
   const initials = profile?.username
     ? profile.username.slice(0, 2).toUpperCase()

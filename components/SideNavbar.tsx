@@ -18,6 +18,7 @@ import { FaCodeCompare } from "react-icons/fa6";
 import { FaWrench } from "react-icons/fa";
 import { FaShield } from "react-icons/fa6";
 import { FaMoneyBill } from "react-icons/fa6";
+import { FaUsers } from "react-icons/fa6";
 
 const Menus = [
   {
@@ -26,6 +27,7 @@ const Menus = [
     href: "/profile",
     icon: <FaRegCircleUser size={24} />,
   },
+  { title: "Find Players", href: "/profile-search", icon: <FaUsers size={22} /> },
   {
     title: "Favorites",
     href: "/favorites",
@@ -94,16 +96,17 @@ export function SideNavbar() {
     if (!user) return;
 
     async function fetchUnreadCount() {
-      try {
-        const res = await fetch(`/api/notifications?userId=${user.id}`);
-        if (!res.ok) return;
-        const data = await res.json();
-        const unread = data.filter((n: any) => !n.read).length;
-        setUnreadCount(unread);
-      } catch (err) {
-        console.error("Failed to load notifications:", err);
-      }
-    }
+  if (!user) return;
+  try {
+    const res = await fetch(`/api/notifications?userId=${user.id}`);
+    if (!res.ok) return;
+    const data = await res.json();
+    const unread = data.filter((n: any) => !n.read).length;
+    setUnreadCount(unread);
+  } catch (err) {
+    console.error("Failed to load notifications:", err);
+  }
+}
 
     fetchUnreadCount();
 
