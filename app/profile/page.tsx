@@ -141,7 +141,7 @@ export default function ProfilePage() {
           {/* Banner */}
           {/* edit banner color*/}
 
-          <div className="h-36 bg-gradient-to-r from-blue-900" />
+          <div className="h-36 bg-gradient-to-r from-sky-300" />
           <div className="px-8 py-8 md:px-10 md:py-10">
             <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex items-center gap-4">

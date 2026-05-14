@@ -73,7 +73,7 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userna
         <div className="rounded-2xl bg-white/85 shadow-xl backdrop-blur-md overflow-hidden ring-2 ring-white">
 
           {/* Banner */}
-          <div className="h-36 bg-gradient-to-r from-blue-900" />
+          <div className="h-36 bg-gradient-to-r from-sky-300" />
 
           <div className="px-8 py-8 md:px-10 md:py-10">
             <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
