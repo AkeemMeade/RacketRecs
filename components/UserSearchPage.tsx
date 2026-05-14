@@ -230,7 +230,7 @@ export default function UserSearchPage() {
                 {posts.map((post) => (
                   <Link
                     key={post.id}
-                    href={`/profile/${post.username}?postId=${post.id}`}
+                    href={`/profile/${post.username}/posts?postId=${post.id}`}
                     className="rounded-lg bg-white/90 shadow-lg hover:shadow-xl transition overflow-hidden cursor-pointer group"
                   >
                     {/* Image */}
